@@ -16,6 +16,7 @@ export type UserMessageItemProps = {
   onFocus: () => void
   onBlur: () => void
   onMentionablesChange: (mentionables: Mentionable[]) => void
+  displayMentionables?: Mentionable[]
   isFocused: boolean
   modelId?: string
   onModelChange?: (modelId: string) => void
@@ -31,6 +32,7 @@ export default function UserMessageItem({
   onFocus,
   onBlur,
   onMentionablesChange,
+  displayMentionables,
   isFocused,
   modelId,
   onModelChange,
@@ -63,6 +65,7 @@ export default function UserMessageItem({
         onBlur={onBlur}
         mentionables={message.mentionables}
         setMentionables={onMentionablesChange}
+        displayMentionables={displayMentionables}
         modelId={modelId}
         onModelChange={onModelChange}
         reasoningLevel={reasoningLevel}

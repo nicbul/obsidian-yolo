@@ -51,12 +51,14 @@ export class PromptGenerator {
     maxContextOverride,
     model,
     currentFileContextMode = 'full',
+    currentFileOverride,
   }: {
     messages: ChatMessage[]
     hasTools?: boolean
     maxContextOverride?: number
     model: ChatModel
     currentFileContextMode?: CurrentFileContextMode
+    currentFileOverride?: TFile | null
   }): Promise<RequestMessage[]> {
     if (messages.length === 0) {
       throw new Error('No messages provided')
@@ -107,9 +109,7 @@ export class PromptGenerator {
       ? null
       : this.getSystemMessage(shouldUseRAG, hasTools)
 
-    const currentFile = lastUserMessage.mentionables.find(
-      (m) => m.type === 'current-file',
-    )?.file
+    const currentFile = currentFileOverride ?? null
     const currentFileMessage =
       currentFile && this.settings.chatOptions.includeCurrentFileContent
         ? await this.getCurrentFileMessage(currentFile, currentFileContextMode)
@@ -118,7 +118,6 @@ export class PromptGenerator {
     const requestMessages: RequestMessage[] = [
       ...baseModelSpecialPromptMessage,
       ...(systemMessage ? [systemMessage] : []),
-      ...(currentFileMessage ? [currentFileMessage] : []),
       ...this.getChatHistoryMessages({
         messages: compiledMessages,
         maxContextOverride,
@@ -126,6 +125,7 @@ export class PromptGenerator {
       ...(shouldUseRAG && !isBaseModel
         ? [this.getRagInstructionMessage()]
         : []),
+      ...(currentFileMessage ? [currentFileMessage] : []),
     ]
 
     return requestMessages

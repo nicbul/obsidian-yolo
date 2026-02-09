@@ -1,5 +1,5 @@
 import { UseMutationResult, useMutation } from '@tanstack/react-query'
-import { Notice } from 'obsidian'
+import { Notice, TFile } from 'obsidian'
 import { useCallback, useMemo, useRef } from 'react'
 
 import { useApp } from '../../contexts/app-context'
@@ -29,6 +29,7 @@ type UseChatStreamManagerParams = {
   conversationOverrides?: ConversationOverrideSettings
   modelId: string
   chatMode: ChatMode
+  currentFileOverride?: TFile | null
 }
 
 export type UseChatStreamManager = {
@@ -51,6 +52,7 @@ export function useChatStreamManager({
   conversationOverrides,
   modelId,
   chatMode,
+  currentFileOverride,
 }: UseChatStreamManagerParams): UseChatStreamManager {
   const app = useApp()
   const plugin = usePlugin()
@@ -166,6 +168,7 @@ export function useChatStreamManager({
               maxContextOverride:
                 conversationOverrides?.maxContextMessages ?? undefined,
               currentFileContextMode: 'summary',
+              currentFileOverride,
               geminiTools: {
                 useWebSearch: conversationOverrides?.useWebSearch ?? false,
                 useUrlContext: conversationOverrides?.useUrlContext ?? false,
@@ -193,6 +196,7 @@ export function useChatStreamManager({
             maxContextOverride:
               conversationOverrides?.maxContextMessages ?? undefined,
             currentFileContextMode: 'full',
+            currentFileOverride,
             geminiTools: {
               useWebSearch: conversationOverrides?.useWebSearch ?? false,
               useUrlContext: conversationOverrides?.useUrlContext ?? false,

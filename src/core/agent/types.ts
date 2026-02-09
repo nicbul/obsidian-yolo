@@ -1,3 +1,5 @@
+import { TFile } from 'obsidian'
+
 import { ReasoningLevel } from '../../components/chat-view/chat-input/ReasoningSelect'
 import { ChatMessage } from '../../types/chat'
 import { ChatModel } from '../../types/chat-model.types'
@@ -24,6 +26,7 @@ export type AgentRuntimeRunInput = {
   }
   maxContextOverride?: number
   currentFileContextMode?: 'full' | 'summary'
+  currentFileOverride?: TFile | null
   geminiTools?: {
     useWebSearch?: boolean
     useUrlContext?: boolean

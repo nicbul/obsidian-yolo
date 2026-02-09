@@ -7,4 +7,5 @@ export type ConversationOverrideSettings = {
   useVaultSearch?: boolean | null
   useWebSearch?: boolean | null
   useUrlContext?: boolean | null
+  autoAttachCurrentFile?: boolean | null
 }

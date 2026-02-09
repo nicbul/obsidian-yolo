@@ -1,3 +1,4 @@
+import { TFile } from 'obsidian'
 import { v4 as uuidv4 } from 'uuid'
 
 import {
@@ -47,6 +48,7 @@ export type ResponseGeneratorParams = {
   reasoningLevel?: ReasoningLevel
   maxContextOverride?: number
   currentFileContextMode?: 'full' | 'summary'
+  currentFileOverride?: TFile | null
   geminiTools?: {
     useWebSearch?: boolean
     useUrlContext?: boolean
@@ -73,6 +75,7 @@ export class ResponseGenerator {
   private readonly reasoningLevel?: ReasoningLevel
   private readonly maxContextOverride?: number
   private readonly currentFileContextMode?: 'full' | 'summary'
+  private readonly currentFileOverride?: TFile | null
   private readonly geminiTools?: {
     useWebSearch?: boolean
     useUrlContext?: boolean
@@ -97,6 +100,7 @@ export class ResponseGenerator {
     this.reasoningLevel = params.reasoningLevel
     this.maxContextOverride = params.maxContextOverride
     this.currentFileContextMode = params.currentFileContextMode
+    this.currentFileOverride = params.currentFileOverride
     this.geminiTools = params.geminiTools
   }
 
@@ -228,6 +232,7 @@ export class ResponseGenerator {
       maxContextOverride: this.maxContextOverride,
       model: this.model,
       currentFileContextMode: this.currentFileContextMode,
+      currentFileOverride: this.currentFileOverride,
     })
 
     // Set tools to undefined when no tools are available since some providers
