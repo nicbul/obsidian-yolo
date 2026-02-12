@@ -98,11 +98,6 @@ export function getLocalFileTools(): McpTool[] {
             description:
               'Optional vault-relative directory path. Omit or use "/" for vault root.',
           },
-          scope: {
-            type: 'string',
-            enum: ['files', 'dirs', 'all'],
-            description: 'Filter listed entries by type. Defaults to all.',
-          },
           depth: {
             type: 'integer',
             description:
