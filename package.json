@@ -4,7 +4,8 @@
   "description": "AI chat with note context, smart writing assistance, and one-click edits for your vault.",
   "main": "main.js",
   "scripts": {
-    "dev": "node esbuild.config.mjs",
+    "dev": "concurrently -n app,styles -c blue,magenta \"npm:dev:app\" \"npm:styles:watch\"",
+    "dev:app": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
     "styles:build": "postcss src/styles/index.css -o styles.css",
     "styles:watch": "postcss src/styles/index.css -o styles.css -w",
@@ -34,6 +35,7 @@
     "@typescript-eslint/eslint-plugin": "^8.50.1",
     "@typescript-eslint/parser": "^8.50.1",
     "builtin-modules": "3.3.0",
+    "concurrently": "^9.2.1",
     "drizzle-kit": "^0.30.3",
     "esbuild": "0.17.3",
     "eslint": "^9.39.2",
