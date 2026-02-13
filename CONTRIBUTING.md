@@ -30,6 +30,13 @@ We welcome contributions to Obsidian Next Composer! This document will guide you
 
 5. To check if everything is building correctly, set the `logLevel: debug` in `esbuild.config.mjs`. This will provide more detailed output during the build process, helping you identify any issues.
 
+### CSS Style Workflow
+
+- Style source files live in `src/styles/**` and are organized by module.
+- Root `styles.css` is a generated artifact and should not be edited directly.
+- Rebuild styles with `npm run styles:build` (or watch with `npm run styles:watch`).
+- For style-related PRs, ensure `npm run styles:build` and `npm run type:check` both pass before submission.
+
 ## Database Development
 
 We use PGlite and Drizzle ORM for database management in this project. This section will guide you through working with the database schema and making changes.

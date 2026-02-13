@@ -10,3 +10,4 @@ Note: If your changes include UI modifications, please include screenshots to he
 - [ ] I have performed a code linting check and type check (by running `npm run lint:check` and `npm run type:check`)
 - [ ] I have run the test suite (by running `npm run test`)
 - [ ] I have tested the functionality manually
+- [ ] If this PR changes CSS, I edited `src/styles/**`, rebuilt `styles.css` (`npm run styles:build`), and verified no unintended style regressions

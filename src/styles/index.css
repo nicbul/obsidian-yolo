@@ -2,6 +2,7 @@
 @import './settings/providers-models.css';
 @import './settings/mcp.css';
 @import './settings/rag.css';
+@import './settings/assistants.css';
 @import './settings/tabs.css';
 @import './settings/agent.css';
 
@@ -13,5 +14,3 @@
 @import './panels/quick-ask.css';
 
 @import './selection/selection-chat.css';
-
-@import './legacy.css';
