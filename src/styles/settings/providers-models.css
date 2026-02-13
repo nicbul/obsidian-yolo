@@ -1,0 +1,206 @@
+/* Providers and Models Section Styles */
+.smtcmp-providers-models-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-2);
+}
+
+.smtcmp-provider-section {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  overflow: hidden;
+  cursor: grab;
+}
+
+.smtcmp-provider-section:active {
+  cursor: grabbing;
+}
+
+/* Provider drag visual feedback */
+.smtcmp-provider-dragging {
+  background-color: var(--background-modifier-hover);
+  transform: translateX(2px) scale(0.995);
+  opacity: 0.98;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.smtcmp-provider-drag-over-before {
+  border-top: 2px solid var(--interactive-accent);
+  transition: border-top 120ms ease;
+}
+
+.smtcmp-provider-drag-over-after {
+  border-bottom: 2px solid var(--interactive-accent);
+  transition: border-bottom 120ms ease;
+}
+
+.smtcmp-provider-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-faint);
+  cursor: grab;
+  user-select: none;
+  padding: 0;
+  transition:
+    transform 120ms ease,
+    color 120ms ease;
+}
+
+.smtcmp-provider-drag-handle:hover {
+  color: var(--text-normal);
+}
+
+.smtcmp-provider-drag-handle:active {
+  cursor: grabbing;
+}
+
+.smtcmp-provider-drag-handle svg {
+  width: var(--icon-m);
+  height: var(--icon-m);
+  stroke-width: var(--icon-stroke);
+}
+
+/* Provider drop success animation - reuse existing drop-flash animation */
+.smtcmp-provider-drop-success {
+  animation: smtcmp-drop-flash 650ms ease-out;
+}
+
+.smtcmp-provider-header {
+  display: flex;
+  align-items: center;
+  padding: var(--size-4-2);
+  background-color: var(--background-primary-alt);
+  gap: var(--size-4-2);
+}
+
+.smtcmp-provider-expand-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+
+.smtcmp-provider-expand-btn:hover {
+  color: var(--text-normal);
+}
+
+.smtcmp-provider-info {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--size-4-3);
+}
+
+.smtcmp-provider-id {
+  font-weight: 600;
+  min-width: 120px;
+}
+
+.smtcmp-provider-type {
+  color: var(--text-muted);
+  min-width: 100px;
+}
+
+.smtcmp-provider-api-key {
+  color: var(--text-accent);
+  cursor: pointer;
+}
+
+.smtcmp-provider-api-key:hover {
+  text-decoration: underline;
+}
+
+.smtcmp-provider-actions {
+  display: flex;
+  gap: var(--size-4-1);
+}
+
+.smtcmp-provider-models {
+  padding: var(--size-4-3);
+  background-color: var(--background-primary);
+  border-top: 1px solid var(--background-modifier-border);
+}
+
+.smtcmp-models-subsection {
+  margin-bottom: var(--size-4-3);
+}
+
+.smtcmp-models-subsection:last-child {
+  margin-bottom: 0;
+}
+
+.smtcmp-models-subsection-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--size-4-2);
+  font-weight: 500;
+}
+
+.smtcmp-add-model-btn {
+  font-size: var(--font-ui-smaller);
+  padding: var(--size-2-1) var(--size-4-2);
+  background-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: var(--button-radius);
+  cursor: pointer;
+}
+
+.smtcmp-add-model-btn:hover {
+  background-color: var(--interactive-accent-hover);
+}
+
+.smtcmp-models-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-ui-smaller);
+}
+
+.smtcmp-models-table th {
+  text-align: left;
+  padding: var(--size-2-2) var(--size-4-2);
+  border-bottom: 1px solid var(--background-modifier-border);
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.smtcmp-models-table td {
+  padding: var(--size-2-2) var(--size-4-2);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.smtcmp-models-table tr:last-child td {
+  border-bottom: none;
+}
+
+.smtcmp-no-models {
+  padding: var(--size-4-3);
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Embedding models table column sizing */
+/* Note: Embedding table uses <colgroup> with last two 60px columns to align with chat models */
+
+.smtcmp-add-provider-btn {
+  width: 100%;
+  padding: var(--size-4-2);
+  background-color: var(--interactive-normal);
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.smtcmp-add-provider-btn:hover {
+  background-color: var(--interactive-hover);
+  border-color: var(--background-modifier-border-hover);
+}
+

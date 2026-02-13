@@ -1,1 +1,7 @@
+@import './settings/base.css';
+@import './settings/providers-models.css';
+@import './settings/mcp.css';
+@import './settings/rag.css';
+@import './settings/tabs.css';
+
 @import './legacy.css';
