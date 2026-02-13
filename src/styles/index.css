@@ -3,5 +3,15 @@
 @import './settings/mcp.css';
 @import './settings/rag.css';
 @import './settings/tabs.css';
+@import './settings/agent.css';
+
+@import './chat/input.css';
+@import './chat/message.css';
+@import './chat/popover.css';
+
+@import './panels/smart-space.css';
+@import './panels/quick-ask.css';
+
+@import './selection/selection-chat.css';
 
 @import './legacy.css';

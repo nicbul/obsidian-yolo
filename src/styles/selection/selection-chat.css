@@ -1,0 +1,165 @@
+/* ============================================
+   Selection Chat - Cursor-like text selection actions
+   ============================================ */
+
+/* Overlay root container */
+.smtcmp-selection-chat-overlay-host {
+  position: relative;
+}
+
+.smtcmp-selection-chat-overlay-root {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.smtcmp-selection-chat-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Selection Indicator - small floating capsule */
+.smtcmp-selection-indicator {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  background: var(--background-primary);
+  border: 1px solid var(--h1-color, var(--interactive-accent));
+  box-shadow: var(--shadow-s);
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 2;
+  opacity: 0;
+  transform: scale(0.85);
+  transition:
+    opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.smtcmp-selection-indicator.visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.smtcmp-selection-indicator:hover {
+  background: var(--background-primary);
+  border-color: var(--interactive-accent-hover);
+  box-shadow: var(--shadow-s);
+  transform: scale(1.05);
+}
+
+.smtcmp-selection-indicator svg {
+  width: 14px;
+  height: 14px;
+  color: var(--h1-color, var(--interactive-accent));
+}
+
+/* Selection Actions Menu */
+.smtcmp-selection-menu {
+  position: absolute;
+  min-width: 200px;
+  max-width: 280px;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  transform: translateY(-4px) scale(0.96);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.smtcmp-selection-menu.visible {
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.smtcmp-selection-menu-content {
+  background: var(--background-primary);
+  border: 1px solid
+    color-mix(in srgb, var(--interactive-accent) 30%, transparent);
+  border-radius: var(--radius-m);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--interactive-accent) 8%, transparent),
+    0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.smtcmp-selection-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease;
+  width: 100%;
+  text-align: left;
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+}
+
+.smtcmp-selection-menu-item:hover,
+.smtcmp-selection-menu-item:focus,
+.smtcmp-selection-menu-item:focus-visible {
+  background: color-mix(
+    in srgb,
+    var(--background-modifier-hover) 40%,
+    transparent
+  ) !important;
+  border-color: color-mix(
+    in srgb,
+    var(--interactive-accent) 55%,
+    transparent
+  ) !important;
+  outline: none;
+}
+
+.smtcmp-selection-menu-item:active {
+  transform: scale(0.97);
+}
+
+.smtcmp-selection-menu-item-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: color-mix(
+    in srgb,
+    var(--h1-color, var(--interactive-accent)) 12%,
+    transparent
+  );
+  color: var(--h1-color, var(--interactive-accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.smtcmp-selection-menu-item-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.smtcmp-selection-menu-item-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
