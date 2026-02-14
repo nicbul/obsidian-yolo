@@ -1,13 +1,3 @@
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import {
-  BookOpen,
-  Copy,
-  Cpu,
-  MoreHorizontal,
-  Plus,
-  Trash2,
-  Wrench,
-} from 'lucide-react'
 import { App } from 'obsidian'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -18,12 +8,10 @@ import { useSettings } from '../../../contexts/settings-context'
 import { getLocalFileToolServerName } from '../../../core/mcp/localFileTools'
 import { AgentPersona, Assistant } from '../../../types/assistant.types'
 import { McpTool } from '../../../types/mcp.types'
-import { renderAssistantIcon } from '../../../utils/assistant-icon'
 import { ObsidianButton } from '../../common/ObsidianButton'
 import { ObsidianSetting } from '../../common/ObsidianSetting'
 import { ObsidianTextArea } from '../../common/ObsidianTextArea'
 import { ObsidianTextInput } from '../../common/ObsidianTextInput'
-import { ConfirmModal } from '../../modals/ConfirmModal'
 import { openIconPicker } from '../assistants/AssistantIconPicker'
 
 type AgentsSectionContentProps = {
@@ -52,16 +40,6 @@ function createNewAgent(defaultModelId: string): Assistant {
     temperature: 0.7,
     topP: 0.9,
     maxOutputTokens: 4096,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  }
-}
-
-function cloneAgent(agent: Assistant, suffix: string): Assistant {
-  return {
-    ...agent,
-    id: crypto.randomUUID(),
-    name: `${agent.name}${suffix}`,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   }
@@ -129,7 +107,6 @@ export function AgentsSectionContent({
   })
   const [activeTab, setActiveTab] = useState<AgentEditorTab>('profile')
   const [availableTools, setAvailableTools] = useState<McpTool[]>([])
-  const showAssistantList = !isDirectEntry || !draftAgent
 
   useEffect(() => {
     let mounted = true
@@ -230,58 +207,6 @@ export function AgentsSectionContent({
     setDraftAgent(null)
   }
 
-  const handleDelete = (assistant: Assistant) => {
-    let confirmed = false
-    const modal = new ConfirmModal(app, {
-      title: t('settings.agent.deleteConfirmTitle', 'Confirm delete agent'),
-      message: `${t('settings.agent.deleteConfirmMessagePrefix', 'Are you sure you want to delete agent')} "${assistant.name}"${t('settings.agent.deleteConfirmMessageSuffix', '? This action cannot be undone.')}`,
-      ctaText: t('common.delete'),
-      onConfirm: () => {
-        confirmed = true
-      },
-    })
-
-    modal.onClose = () => {
-      if (!confirmed) {
-        return
-      }
-      void (async () => {
-        const updatedAssistants = assistants.filter(
-          (item) => item.id !== assistant.id,
-        )
-        await setSettings({
-          ...settings,
-          assistants: updatedAssistants,
-          currentAssistantId:
-            settings.currentAssistantId === assistant.id
-              ? updatedAssistants[0]?.id
-              : settings.currentAssistantId,
-          quickAskAssistantId:
-            settings.quickAskAssistantId === assistant.id
-              ? updatedAssistants[0]?.id
-              : settings.quickAskAssistantId,
-        })
-        if (draftAgent?.id === assistant.id) {
-          setDraftAgent(null)
-        }
-      })().catch((error: unknown) => {
-        console.error('Failed to delete agent', error)
-      })
-    }
-
-    modal.open()
-  }
-
-  const handleDuplicate = async (assistant: Assistant) => {
-    await setSettings({
-      ...settings,
-      assistants: [
-        ...assistants,
-        cloneAgent(assistant, t('settings.agent.copySuffix', ' (copy)')),
-      ],
-    })
-  }
-
   const toggleTool = (toolName: string) => {
     if (!draftAgent) {
       return
@@ -314,12 +239,6 @@ export function AgentsSectionContent({
     })
   }
 
-  const toolsEnabledCount = (assistant: Assistant): number =>
-    assistant.enableTools ? (assistant.enabledToolNames?.length ?? 0) : 0
-
-  const skillsEnabledCount = (assistant: Assistant): number =>
-    assistant.enabledSkills?.length ?? 0
-
   const localFsServerName = getLocalFileToolServerName()
 
   return (
@@ -328,138 +247,6 @@ export function AgentsSectionContent({
         isDirectEntry ? ' smtcmp-agent-editor-panel--direct' : ''
       }`}
     >
-      {showAssistantList && (
-        <div className="smtcmp-agent-modal-header-row">
-          <div className="smtcmp-settings-desc">
-            {t(
-              'settings.agent.agentsDesc',
-              'Click Configure to edit each agent profile and prompt.',
-            )}
-          </div>
-          <div className="smtcmp-agent-modal-header-actions">
-            <ObsidianButton
-              text={t('settings.agent.newAgent', 'New agent')}
-              icon="plus"
-              cta
-              onClick={openCreate}
-            />
-            <ObsidianButton
-              text={t('common.close', 'Close')}
-              onClick={onClose}
-            />
-          </div>
-        </div>
-      )}
-
-      {showAssistantList && (
-        <div className="smtcmp-agent-grid">
-          {assistants.map((assistant) => (
-            <article
-              key={assistant.id}
-              className="smtcmp-agent-card smtcmp-agent-card--clickable"
-              role="button"
-              tabIndex={0}
-              onClick={() => openEdit(assistant)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault()
-                  openEdit(assistant)
-                }
-              }}
-            >
-              <div className="smtcmp-agent-card-top">
-                <div className="smtcmp-agent-card-top-main">
-                  <div className="smtcmp-agent-avatar">
-                    {renderAssistantIcon(assistant.icon, 16)}
-                  </div>
-                  <div className="smtcmp-agent-main">
-                    <div className="smtcmp-agent-name-row">
-                      <div className="smtcmp-agent-name">{assistant.name}</div>
-                      {settings.currentAssistantId === assistant.id && (
-                        <span className="smtcmp-agent-current-badge">
-                          {t('settings.agent.current', 'Current')}
-                        </span>
-                      )}
-                    </div>
-                    {assistant.description && (
-                      <div className="smtcmp-agent-desc">
-                        {assistant.description}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <DropdownMenu.Root>
-                  <DropdownMenu.Trigger
-                    className="smtcmp-agent-card-menu-trigger"
-                    aria-label={t('common.actions', 'Actions')}
-                    onClick={(event) => event.stopPropagation()}
-                  >
-                    <MoreHorizontal size={14} />
-                  </DropdownMenu.Trigger>
-                  <DropdownMenu.Portal>
-                    <DropdownMenu.Content
-                      className="smtcmp-agent-card-menu-popover"
-                      align="end"
-                      sideOffset={8}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <ul className="smtcmp-agent-card-menu-list">
-                        <DropdownMenu.Item
-                          asChild
-                          onSelect={() => {
-                            void handleDuplicate(assistant)
-                          }}
-                        >
-                          <li className="smtcmp-agent-card-menu-item">
-                            <span className="smtcmp-agent-card-menu-icon">
-                              <Copy size={16} />
-                            </span>
-                            {t('settings.agent.duplicate', 'Duplicate')}
-                          </li>
-                        </DropdownMenu.Item>
-                        <DropdownMenu.Item
-                          asChild
-                          onSelect={() => handleDelete(assistant)}
-                        >
-                          <li className="smtcmp-agent-card-menu-item smtcmp-agent-card-menu-danger">
-                            <span className="smtcmp-agent-card-menu-icon">
-                              <Trash2 size={16} />
-                            </span>
-                            {t('common.delete')}
-                          </li>
-                        </DropdownMenu.Item>
-                      </ul>
-                    </DropdownMenu.Content>
-                  </DropdownMenu.Portal>
-                </DropdownMenu.Root>
-              </div>
-
-              <div className="smtcmp-agent-meta-row">
-                <span className="smtcmp-agent-meta-item">
-                  <Cpu size={12} />
-                  {assistant.modelId || settings.chatModelId}
-                </span>
-                <span className="smtcmp-agent-meta-item">
-                  <Wrench size={12} />
-                  {t(
-                    'settings.agent.editorToolsCount',
-                    '{count} tools',
-                  ).replace('{count}', String(toolsEnabledCount(assistant)))}
-                </span>
-                <span className="smtcmp-agent-meta-item">
-                  <BookOpen size={12} />
-                  {t(
-                    'settings.agent.editorSkillsCount',
-                    '{count} skills',
-                  ).replace('{count}', String(skillsEnabledCount(assistant)))}
-                </span>
-              </div>
-            </article>
-          ))}
-        </div>
-      )}
-
       {draftAgent && (
         <div className="smtcmp-agent-editor-sheet">
           <div className="smtcmp-agent-editor-sheet-header">
@@ -785,15 +572,6 @@ export function AgentsSectionContent({
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {showAssistantList && assistants.length === 0 && (
-        <div className="smtcmp-agent-empty">
-          <Plus size={16} />
-          <span>
-            {t('settings.agent.noAgents', 'No agents configured yet')}
-          </span>
         </div>
       )}
     </div>

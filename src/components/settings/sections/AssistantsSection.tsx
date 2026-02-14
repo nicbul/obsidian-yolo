@@ -71,9 +71,9 @@ export const AssistantsSection: FC<AssistantsSectionProps> = ({ app }) => {
       >
         <div className="smtcmp-settings-desc">{assistantsCountLabel}</div>
         <ObsidianButton
-          text={t('settings.assistants.configureAssistants', '配置助手')}
+          text={t('settings.agent.newAgent', 'New agent')}
           onClick={() => {
-            const modal = new AssistantsModal(app, plugin)
+            const modal = new AssistantsModal(app, plugin, undefined, true)
             modal.open()
           }}
         />
