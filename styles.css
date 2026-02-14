@@ -2789,6 +2789,13 @@
   font-weight: var(--font-medium);
 }
 
+.smtcmp-agent-cap-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--size-4-2);
+}
+
 .smtcmp-agent-cap-count {
   margin-top: var(--size-2-2);
   color: var(--text-muted);
@@ -2802,6 +2809,60 @@
   gap: var(--size-2-2);
 }
 
+.smtcmp-agent-tools-trigger {
+  white-space: nowrap;
+}
+
+.smtcmp-agent-tools-modal-content {
+  margin-top: var(--size-4-2);
+  max-height: 420px;
+  overflow: auto;
+}
+
+.smtcmp-agent-tool-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-2);
+}
+
+.smtcmp-agent-tool-row {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  background: var(--background-secondary-alt);
+  padding: var(--size-2-2) var(--size-4-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--size-4-2);
+}
+
+.smtcmp-agent-tool-main {
+  min-width: 0;
+}
+
+.smtcmp-agent-tool-name {
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+}
+
+.smtcmp-agent-tool-name--mono {
+  font-family: var(--font-monospace);
+}
+
+.smtcmp-agent-tool-source {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.smtcmp-agent-tool-toggle {
+  flex-shrink: 0;
+}
+
+.smtcmp-agent-tools-empty {
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
 .smtcmp-agent-chip {
   border: 1px solid var(--background-modifier-border);
   border-radius: var(--radius-s);
@@ -2809,6 +2870,11 @@
   color: var(--text-muted);
   font-size: var(--font-ui-smaller);
   background: var(--background-secondary-alt);
+}
+
+.smtcmp-agent-chip--status {
+  color: var(--text-success);
+  border-color: color-mix(in srgb, var(--text-success) 30%, transparent);
 }
 
 .smtcmp-agent-empty {

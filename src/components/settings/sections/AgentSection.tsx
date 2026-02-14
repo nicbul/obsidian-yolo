@@ -1,14 +1,17 @@
 import { BookOpen, Bot, Cpu, Wrench } from 'lucide-react'
 import { App } from 'obsidian'
-import React from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { useLanguage } from '../../../contexts/language-context'
 import { usePlugin } from '../../../contexts/plugin-context'
 import { useSettings } from '../../../contexts/settings-context'
+import { McpManager } from '../../../core/mcp/mcpManager'
 import { Assistant } from '../../../types/assistant.types'
+import { McpServerState, McpServerStatus } from '../../../types/mcp.types'
 import { renderAssistantIcon } from '../../../utils/assistant-icon'
 import { ObsidianButton } from '../../common/ObsidianButton'
 import { ConfirmModal } from '../../modals/ConfirmModal'
+import { AgentToolsModal } from '../modals/AgentToolsModal'
 import { AssistantsModal } from '../modals/AssistantsModal'
 
 type AgentSectionProps = {
@@ -22,13 +25,50 @@ const DEMO_SKILLS = [
   'Architectural Thinking',
 ]
 
-const TOOL_BADGES = ['Read Vault', 'Write Vault', 'Network', 'Commands']
+const BUILTIN_TOOLS = ['Read Vault', 'Write Vault', 'Network', 'Commands']
 
 export function AgentSection({ app }: AgentSectionProps) {
   const { settings, setSettings } = useSettings()
   const { t } = useLanguage()
   const plugin = usePlugin()
   const assistants = settings.assistants || []
+  const [mcpManager, setMcpManager] = useState<McpManager | null>(null)
+  const [mcpServers, setMcpServers] = useState<McpServerState[]>([])
+
+  useEffect(() => {
+    let isMounted = true
+    void plugin
+      .getMcpManager()
+      .then((manager) => {
+        if (!isMounted) {
+          return
+        }
+        setMcpManager(manager)
+        setMcpServers(manager.getServers())
+      })
+      .catch((error: unknown) => {
+        console.error(
+          'Failed to initialize MCP manager in Agent section',
+          error,
+        )
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [plugin])
+
+  useEffect(() => {
+    if (!mcpManager) {
+      return
+    }
+    const unsubscribe = mcpManager.subscribeServersChange((servers) => {
+      setMcpServers(servers)
+    })
+    return () => {
+      unsubscribe()
+    }
+  }, [mcpManager])
 
   const handleOpenAssistantsModal = () => {
     const modal = new AssistantsModal(app, plugin)
@@ -91,20 +131,54 @@ export function AgentSection({ app }: AgentSectionProps) {
     modal.open()
   }
 
+  const handleOpenToolsModal = () => {
+    const modal = new AgentToolsModal(app, plugin)
+    modal.open()
+  }
+
+  const mcpTools = useMemo(
+    () =>
+      mcpServers
+        .filter((server) => server.status === McpServerStatus.Connected)
+        .flatMap((server) =>
+          server.tools.map((tool) => {
+            const option = server.config.toolOptions[tool.name]
+            return {
+              id: `${server.name}:${tool.name}`,
+              name: tool.name,
+              source: server.name,
+              serverId: server.name,
+              enabled: !(option?.disabled ?? false),
+            }
+          }),
+        ),
+    [mcpServers],
+  )
+
   const skillsCountLabel = t(
     'settings.agent.skillsCount',
     '{count} skills',
   ).replace('{count}', String(DEMO_SKILLS.length))
 
+  const enabledToolsCount =
+    BUILTIN_TOOLS.length + mcpTools.filter((tool) => tool.enabled).length
+
   const toolsCountLabel = t(
-    'settings.agent.toolsCount',
-    '{count} tools',
-  ).replace('{count}', String(TOOL_BADGES.length))
+    'settings.agent.toolsCountWithEnabled',
+    '{count} tools (enabled {enabled})',
+  )
+    .replace('{count}', String(BUILTIN_TOOLS.length + mcpTools.length))
+    .replace('{enabled}', String(enabledToolsCount))
 
   const mcpCountLabel = t(
     'settings.agent.mcpServerCount',
     '{count} MCP servers connected',
   ).replace('{count}', String(settings.mcp.servers.length))
+
+  const toolTags = [
+    ...BUILTIN_TOOLS.map((name) => ({ key: `builtin:${name}`, label: name })),
+    ...mcpTools.map((tool) => ({ key: tool.id, label: tool.name })),
+  ]
 
   return (
     <div className="smtcmp-settings-section smtcmp-agent-section">
@@ -128,15 +202,23 @@ export function AgentSection({ app }: AgentSectionProps) {
 
         <div className="smtcmp-agent-cap-grid">
           <article className="smtcmp-agent-cap-card">
-            <div className="smtcmp-agent-cap-title">
-              <Wrench size={14} />
-              <span>{t('settings.agent.tools', 'Tools')}</span>
+            <div className="smtcmp-agent-cap-title-row">
+              <div className="smtcmp-agent-cap-title">
+                <Wrench size={14} />
+                <span>{t('settings.agent.tools', 'Tools')}</span>
+              </div>
+              <button
+                className="mod-cta smtcmp-agent-tools-trigger"
+                onClick={handleOpenToolsModal}
+              >
+                {t('settings.agent.manageTools', 'Manage tools')}
+              </button>
             </div>
             <div className="smtcmp-agent-cap-count">{toolsCountLabel}</div>
             <div className="smtcmp-agent-cap-tags">
-              {TOOL_BADGES.map((name) => (
-                <span key={name} className="smtcmp-agent-chip">
-                  {name}
+              {toolTags.map((tool) => (
+                <span key={tool.key} className="smtcmp-agent-chip">
+                  {tool.label}
                 </span>
               ))}
             </div>

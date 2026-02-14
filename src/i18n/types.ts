@@ -190,6 +190,7 @@ export type TranslationKeys = {
       mcpServerCount?: string
       tools?: string
       toolsCount?: string
+      toolsCountWithEnabled?: string
       skills?: string
       skillsCount?: string
       agents?: string
@@ -203,6 +204,11 @@ export type TranslationKeys = {
       deleteConfirmTitle?: string
       deleteConfirmMessagePrefix?: string
       deleteConfirmMessageSuffix?: string
+      toolSourceBuiltin?: string
+      toolSourceMcp?: string
+      noMcpTools?: string
+      toolsEnabledCount?: string
+      manageTools?: string
     }
     providers: {
       title: string
