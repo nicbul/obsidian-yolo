@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLanguage } from '../../../contexts/language-context'
 import { usePlugin } from '../../../contexts/plugin-context'
 import { useSettings } from '../../../contexts/settings-context'
+import { getLocalFileTools } from '../../../core/mcp/localFileTools'
 import { McpManager } from '../../../core/mcp/mcpManager'
 import { Assistant } from '../../../types/assistant.types'
 import { McpServerState, McpServerStatus } from '../../../types/mcp.types'
@@ -25,7 +26,31 @@ const DEMO_SKILLS = [
   'Architectural Thinking',
 ]
 
-const BUILTIN_TOOLS = ['Read Vault', 'Write Vault', 'Network', 'Commands']
+const BUILTIN_TOOL_LABEL_KEYS: Record<
+  string,
+  { key: string; fallback: string }
+> = {
+  fs_list: {
+    key: 'settings.agent.builtinFsListLabel',
+    fallback: 'Read Vault',
+  },
+  fs_search: {
+    key: 'settings.agent.builtinFsSearchLabel',
+    fallback: 'Search Vault',
+  },
+  fs_read: {
+    key: 'settings.agent.builtinFsReadLabel',
+    fallback: 'Read File',
+  },
+  fs_edit: {
+    key: 'settings.agent.builtinFsEditLabel',
+    fallback: 'Edit File',
+  },
+  fs_write: {
+    key: 'settings.agent.builtinFsWriteLabel',
+    fallback: 'Write Vault',
+  },
+}
 
 export function AgentSection({ app }: AgentSectionProps) {
   const { settings, setSettings } = useSettings()
@@ -155,19 +180,35 @@ export function AgentSection({ app }: AgentSectionProps) {
     [mcpServers],
   )
 
+  const builtinTools = useMemo(
+    () =>
+      getLocalFileTools().map((tool) => {
+        const meta = BUILTIN_TOOL_LABEL_KEYS[tool.name]
+        return {
+          id: tool.name,
+          label: meta ? t(meta.key, meta.fallback) : tool.name,
+          enabled: !(
+            settings.mcp.builtinToolOptions[tool.name]?.disabled ?? false
+          ),
+        }
+      }),
+    [settings.mcp.builtinToolOptions, t],
+  )
+
   const skillsCountLabel = t(
     'settings.agent.skillsCount',
     '{count} skills',
   ).replace('{count}', String(DEMO_SKILLS.length))
 
   const enabledToolsCount =
-    BUILTIN_TOOLS.length + mcpTools.filter((tool) => tool.enabled).length
+    builtinTools.filter((tool) => tool.enabled).length +
+    mcpTools.filter((tool) => tool.enabled).length
 
   const toolsCountLabel = t(
     'settings.agent.toolsCountWithEnabled',
     '{count} tools (enabled {enabled})',
   )
-    .replace('{count}', String(BUILTIN_TOOLS.length + mcpTools.length))
+    .replace('{count}', String(builtinTools.length + mcpTools.length))
     .replace('{enabled}', String(enabledToolsCount))
 
   const mcpCountLabel = t(
@@ -176,7 +217,10 @@ export function AgentSection({ app }: AgentSectionProps) {
   ).replace('{count}', String(settings.mcp.servers.length))
 
   const toolTags = [
-    ...BUILTIN_TOOLS.map((name) => ({ key: `builtin:${name}`, label: name })),
+    ...builtinTools.map((tool) => ({
+      key: `builtin:${tool.id}`,
+      label: tool.label,
+    })),
     ...mcpTools.map((tool) => ({ key: tool.id, label: tool.name })),
   ]
 

@@ -10,7 +10,10 @@ import {
 import { assistantSchema } from '../../types/assistant.types'
 import { chatModelSchema } from '../../types/chat-model.types'
 import { embeddingModelSchema } from '../../types/embedding-model.types'
-import { mcpServerConfigSchema } from '../../types/mcp.types'
+import {
+  mcpServerConfigSchema,
+  mcpServerToolOptionsSchema,
+} from '../../types/mcp.types'
 import { llmProviderSchema } from '../../types/provider.types'
 
 import { SETTINGS_SCHEMA_VERSION } from './migrations'
@@ -254,9 +257,11 @@ export const smartComposerSettingsSchema = z.object({
   mcp: z
     .object({
       servers: z.array(mcpServerConfigSchema).catch([]),
+      builtinToolOptions: mcpServerToolOptionsSchema.catch({}),
     })
     .catch({
       servers: [],
+      builtinToolOptions: {},
     }),
 
   // Chat options

@@ -16,7 +16,6 @@ import { EditorTab } from './tabs/EditorTab'
 import { KnowledgeTab } from './tabs/KnowledgeTab'
 import { ModelsTab } from './tabs/ModelsTab'
 import { OthersTab } from './tabs/OthersTab'
-import { ToolsTab } from './tabs/ToolsTab'
 
 type SettingsTabsProps = {
   app: App
@@ -28,7 +27,6 @@ export type SettingsTabId =
   | 'chat'
   | 'editor'
   | 'knowledge'
-  | 'tools'
   | 'agent'
   | 'others'
 
@@ -60,11 +58,6 @@ const SETTINGS_TABS: SettingsTab[] = [
     component: KnowledgeTab,
   },
   {
-    id: 'tools',
-    labelKey: 'settings.tabs.tools',
-    component: ToolsTab,
-  },
-  {
     id: 'agent',
     labelKey: 'settings.tabs.agent',
     component: AgentTab,
@@ -83,6 +76,9 @@ export function SettingsTabs({ app, plugin }: SettingsTabsProps) {
   const [activeTab, setActiveTab] = useState<SettingsTabId>(() => {
     // Load from localStorage
     const stored = app.loadLocalStorage(STORAGE_KEY)
+    if (stored === 'tools') {
+      return 'agent'
+    }
     if (stored && SETTINGS_TABS.some((tab) => tab.id === stored)) {
       return stored as SettingsTabId
     }

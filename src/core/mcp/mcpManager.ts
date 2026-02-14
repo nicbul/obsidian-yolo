@@ -86,6 +86,10 @@ export class McpManager {
     return action !== 'delete_file' && action !== 'delete_dir'
   }
 
+  private isLocalToolEnabled(toolName: string): boolean {
+    return !(this.settings.mcp.builtinToolOptions[toolName]?.disabled ?? false)
+  }
+
   constructor({
     app,
     settings,
@@ -367,10 +371,12 @@ export class McpManager {
     const nextTools = includeBuiltinTools
       ? [
           ...availableTools,
-          ...getLocalFileTools().map((tool) => ({
-            ...tool,
-            name: getToolName(getLocalFileToolServerName(), tool.name),
-          })),
+          ...getLocalFileTools()
+            .filter((tool) => this.isLocalToolEnabled(tool.name))
+            .map((tool) => ({
+              ...tool,
+              name: getToolName(getLocalFileToolServerName(), tool.name),
+            })),
         ]
       : availableTools
 
@@ -421,6 +427,9 @@ export class McpManager {
     try {
       const { serverName, toolName } = parseToolName(requestToolName)
       if (serverName === getLocalFileToolServerName()) {
+        if (!this.isLocalToolEnabled(toolName)) {
+          return false
+        }
         return this.isLocalToolAutoExecutable({ toolName, requestArgs })
       }
       const server = this.servers.find((server) => server.name === serverName)
@@ -484,6 +493,9 @@ export class McpManager {
         typeof args === 'string' ? (args === '' ? {} : JSON.parse(args)) : args
 
       if (serverName === getLocalFileToolServerName()) {
+        if (!this.isLocalToolEnabled(toolName)) {
+          throw new Error(`Built-in tool ${toolName} is disabled`)
+        }
         const localResult = await callLocalFileTool({
           app: this.app,
           toolName,

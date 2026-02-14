@@ -1,31 +1,72 @@
 import { App } from 'obsidian'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 
 import { useLanguage } from '../../../contexts/language-context'
 import {
   SettingsProvider,
   useSettings,
 } from '../../../contexts/settings-context'
-import { McpManager } from '../../../core/mcp/mcpManager'
+import { getLocalFileTools } from '../../../core/mcp/localFileTools'
 import SmartComposerPlugin from '../../../main'
-import { McpServerState, McpServerStatus } from '../../../types/mcp.types'
-import { ReactModal } from '../../common/ReactModal'
 import { ObsidianToggle } from '../../common/ObsidianToggle'
+import { ReactModal } from '../../common/ReactModal'
+import { McpSection } from '../sections/McpSection'
 
 type AgentToolsModalProps = {
+  app: App
   plugin: SmartComposerPlugin
 }
 
-const BUILTIN_TOOLS = ['Read Vault', 'Write Vault', 'Network', 'Commands']
+const BUILTIN_TOOL_I18N_KEYS: Record<
+  string,
+  {
+    labelKey: string
+    descKey: string
+    labelFallback: string
+    descFallback: string
+  }
+> = {
+  fs_list: {
+    labelKey: 'settings.agent.builtinFsListLabel',
+    descKey: 'settings.agent.builtinFsListDesc',
+    labelFallback: 'Read Vault',
+    descFallback:
+      'List directory structure under a vault path. Useful for workspace orientation.',
+  },
+  fs_search: {
+    labelKey: 'settings.agent.builtinFsSearchLabel',
+    descKey: 'settings.agent.builtinFsSearchDesc',
+    labelFallback: 'Search Vault',
+    descFallback: 'Search files, folders, or markdown content in vault.',
+  },
+  fs_read: {
+    labelKey: 'settings.agent.builtinFsReadLabel',
+    descKey: 'settings.agent.builtinFsReadDesc',
+    labelFallback: 'Read File',
+    descFallback: 'Read line ranges from multiple vault files by path.',
+  },
+  fs_edit: {
+    labelKey: 'settings.agent.builtinFsEditLabel',
+    descKey: 'settings.agent.builtinFsEditDesc',
+    labelFallback: 'Edit File',
+    descFallback: 'Apply exact text replacement within a single file.',
+  },
+  fs_write: {
+    labelKey: 'settings.agent.builtinFsWriteLabel',
+    descKey: 'settings.agent.builtinFsWriteDesc',
+    labelFallback: 'Write Vault',
+    descFallback: 'Execute vault write operations for files and folders.',
+  },
+}
 
 export class AgentToolsModal extends ReactModal<AgentToolsModalProps> {
   constructor(app: App, plugin: SmartComposerPlugin) {
     super({
       app,
       Component: AgentToolsModalWrapper,
-      props: { plugin },
+      props: { app, plugin },
       options: {
-        title: 'Agent tools',
+        title: plugin.t('settings.agent.manageTools'),
       },
       plugin,
     })
@@ -34,6 +75,7 @@ export class AgentToolsModal extends ReactModal<AgentToolsModalProps> {
 }
 
 function AgentToolsModalWrapper({
+  app,
   plugin,
   onClose: _onClose,
 }: AgentToolsModalProps & { onClose: () => void }) {
@@ -45,167 +87,101 @@ function AgentToolsModalWrapper({
         plugin.addSettingsChangeListener(listener)
       }
     >
-      <AgentToolsModalContent plugin={plugin} />
+      <AgentToolsModalContent app={app} plugin={plugin} />
     </SettingsProvider>
   )
 }
 
-function AgentToolsModalContent({ plugin }: { plugin: SmartComposerPlugin }) {
+function AgentToolsModalContent({
+  app,
+  plugin,
+}: {
+  app: App
+  plugin: SmartComposerPlugin
+}) {
   const { t } = useLanguage()
   const { settings, setSettings } = useSettings()
-  const [mcpManager, setMcpManager] = useState<McpManager | null>(null)
-  const [mcpServers, setMcpServers] = useState<McpServerState[]>([])
 
-  useEffect(() => {
-    let isMounted = true
-    void plugin
-      .getMcpManager()
-      .then((manager) => {
-        if (!isMounted) {
-          return
-        }
-        setMcpManager(manager)
-        setMcpServers(manager.getServers())
-      })
-      .catch((error: unknown) => {
-        console.error(
-          'Failed to initialize MCP manager in AgentToolsModal',
-          error,
-        )
-      })
-
-    return () => {
-      isMounted = false
-    }
-  }, [plugin])
-
-  useEffect(() => {
-    if (!mcpManager) {
-      return
-    }
-    const unsubscribe = mcpManager.subscribeServersChange((servers) => {
-      setMcpServers(servers)
-    })
-    return () => {
-      unsubscribe()
-    }
-  }, [mcpManager])
-
-  const mcpTools = useMemo(
+  const builtinTools = useMemo(
     () =>
-      mcpServers
-        .filter((server) => server.status === McpServerStatus.Connected)
-        .flatMap((server) =>
-          server.tools.map((tool) => {
-            const option = server.config.toolOptions[tool.name]
-            return {
-              id: `${server.name}:${tool.name}`,
-              name: tool.name,
-              source: server.name,
-              serverId: server.name,
-              enabled: !(option?.disabled ?? false),
-            }
-          }),
-        ),
-    [mcpServers],
-  )
-
-  const toolsCountLabel = t(
-    'settings.agent.toolsCount',
-    '{count} tools',
-  ).replace('{count}', String(BUILTIN_TOOLS.length + mcpTools.length))
-
-  const enabledToolsLabel = t(
-    'settings.agent.toolsEnabledCount',
-    '{count} enabled',
-  ).replace(
-    '{count}',
-    String(
-      BUILTIN_TOOLS.length + mcpTools.filter((tool) => tool.enabled).length,
-    ),
-  )
-
-  const handleToggleMcpTool = (
-    serverId: string,
-    toolName: string,
-    enabled: boolean,
-  ) => {
-    void Promise.resolve(
-      setSettings({
-        ...settings,
-        mcp: {
-          ...settings.mcp,
-          servers: settings.mcp.servers.map((server) => {
-            if (server.id !== serverId) {
-              return server
-            }
-            return {
-              ...server,
-              toolOptions: {
-                ...server.toolOptions,
-                [toolName]: {
-                  ...server.toolOptions[toolName],
-                  disabled: !enabled,
-                },
-              },
-            }
-          }),
-        },
+      getLocalFileTools().map((tool) => {
+        const meta = BUILTIN_TOOL_I18N_KEYS[tool.name]
+        return {
+          id: tool.name,
+          label: meta ? t(meta.labelKey, meta.labelFallback) : tool.name,
+          description: meta
+            ? t(meta.descKey, meta.descFallback)
+            : tool.description,
+          enabled: !(
+            settings.mcp.builtinToolOptions[tool.name]?.disabled ?? false
+          ),
+        }
       }),
-    ).catch((error: unknown) => {
-      console.error('Failed to toggle MCP tool in AgentToolsModal', error)
+    [settings.mcp.builtinToolOptions, t],
+  )
+
+  const handleToggleBuiltinTool = (toolName: string, enabled: boolean) => {
+    void setSettings({
+      ...settings,
+      mcp: {
+        ...settings.mcp,
+        builtinToolOptions: {
+          ...settings.mcp.builtinToolOptions,
+          [toolName]: {
+            ...settings.mcp.builtinToolOptions[toolName],
+            disabled: !enabled,
+          },
+        },
+      },
     })
   }
 
   return (
-    <div className="smtcmp-settings-section smtcmp-settings-section--tight">
-      <div className="smtcmp-settings-desc">
-        {toolsCountLabel} · {enabledToolsLabel}
+    <div className="smtcmp-settings-section">
+      <div className="smtcmp-settings-desc smtcmp-settings-callout">
+        {t(
+          'settings.agent.desc',
+          'Manage global capabilities and configure your agents.',
+        )}
       </div>
-      <div className="smtcmp-agent-tools-modal-content">
-        <div className="smtcmp-agent-tool-list">
-          {BUILTIN_TOOLS.map((name) => (
-            <div key={name} className="smtcmp-agent-tool-row">
-              <div className="smtcmp-agent-tool-main">
-                <div className="smtcmp-agent-tool-name">{name}</div>
-                <div className="smtcmp-agent-tool-source">
-                  {t('settings.agent.toolSourceBuiltin', 'Built-in')}
-                </div>
-              </div>
-              <span className="smtcmp-agent-chip smtcmp-agent-chip--status">
-                {t('settings.mcp.enabled', 'Enabled')}
-              </span>
-            </div>
-          ))}
 
-          {mcpTools.map((tool) => (
-            <div key={tool.id} className="smtcmp-agent-tool-row">
-              <div className="smtcmp-agent-tool-main">
-                <div className="smtcmp-agent-tool-name smtcmp-agent-tool-name--mono">
-                  {tool.name}
-                </div>
-                <div className="smtcmp-agent-tool-source">
-                  {t('settings.agent.toolSourceMcp', 'MCP')}: {tool.source}
+      <div className="smtcmp-settings-sub-header">
+        <span className="smtcmp-agent-tools-section-title">
+          <span>{t('settings.agent.toolSourceBuiltin', 'Built-in')}</span>
+        </span>
+      </div>
+      <div className="smtcmp-mcp-servers-container smtcmp-builtin-tools-table">
+        <div className="smtcmp-mcp-servers-header smtcmp-builtin-tools-table-header">
+          <div>{t('settings.mcp.tools', 'Tools')}</div>
+          <div>{t('settings.agent.descriptionColumn', 'Description')}</div>
+          <div>{t('settings.mcp.enabled', 'Enabled')}</div>
+        </div>
+        <div className="smtcmp-mcp-server smtcmp-builtin-tools-table-body">
+          {builtinTools.map((tool) => (
+            <div
+              key={tool.id}
+              className="smtcmp-mcp-server-row smtcmp-builtin-tools-table-row"
+            >
+              <div className="smtcmp-mcp-server-name">{tool.label}</div>
+              <div className="smtcmp-mcp-server-status smtcmp-builtin-tools-table-description">
+                <div className="smtcmp-mcp-tool-description">
+                  {tool.description}
                 </div>
               </div>
-              <div className="smtcmp-agent-tool-toggle">
+              <div className="smtcmp-mcp-server-toggle">
                 <ObsidianToggle
                   value={tool.enabled}
                   onChange={(enabled) =>
-                    handleToggleMcpTool(tool.serverId, tool.name, enabled)
+                    handleToggleBuiltinTool(tool.id, enabled)
                   }
                 />
               </div>
             </div>
           ))}
-
-          {mcpTools.length === 0 && (
-            <div className="smtcmp-agent-tools-empty">
-              {t('settings.agent.noMcpTools', 'No MCP tools discovered yet')}
-            </div>
-          )}
         </div>
       </div>
+
+      <McpSection app={app} plugin={plugin} embedded />
     </div>
   )
 }

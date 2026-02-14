@@ -31,9 +31,10 @@ import {
 type McpSectionProps = {
   app: App
   plugin: SmartComposerPlugin
+  embedded?: boolean
 }
 
-export function McpSection({ app, plugin }: McpSectionProps) {
+export function McpSection({ app, plugin, embedded = false }: McpSectionProps) {
   const { t } = useLanguage()
   const [mcpManager, setMcpManager] = useState<McpManager | null>(null)
   const [mcpServers, setMcpServers] = useState<McpServerState[]>([])
@@ -70,7 +71,13 @@ export function McpSection({ app, plugin }: McpSectionProps) {
 
   return (
     <div className="smtcmp-settings-section">
-      <div className="smtcmp-settings-header">{t('settings.mcp.title')}</div>
+      {embedded ? (
+        <div className="smtcmp-settings-sub-header">
+          {t('settings.mcp.title')}
+        </div>
+      ) : (
+        <div className="smtcmp-settings-header">{t('settings.mcp.title')}</div>
+      )}
 
       <div className="smtcmp-settings-desc smtcmp-settings-callout">
         <strong>Warning:</strong> {t('settings.mcp.warning')}

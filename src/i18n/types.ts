@@ -209,6 +209,17 @@ export type TranslationKeys = {
       noMcpTools?: string
       toolsEnabledCount?: string
       manageTools?: string
+      descriptionColumn?: string
+      builtinFsListLabel?: string
+      builtinFsListDesc?: string
+      builtinFsSearchLabel?: string
+      builtinFsSearchDesc?: string
+      builtinFsReadLabel?: string
+      builtinFsReadDesc?: string
+      builtinFsEditLabel?: string
+      builtinFsEditDesc?: string
+      builtinFsWriteLabel?: string
+      builtinFsWriteDesc?: string
     }
     providers: {
       title: string

@@ -247,7 +247,7 @@ export const it: TranslationKeys = {
         'Include automaticamente il file correntemente aperto nel contesto della chat.',
       enableTools: 'Abilita strumenti',
       enableToolsDesc:
-        "Permetti all'AI di usare strumenti per cercare nel vault, eseguire calcoli, ecc.",
+        "Permetti all'AI di usare strumenti personalizzati (MCP).",
       maxAutoIterations: 'Iterazioni automatiche massime',
       maxAutoIterationsDesc:
         "Quante volte l'AI può chiamare automaticamente gli strumenti in una singola risposta.",
@@ -289,6 +289,50 @@ export const it: TranslationKeys = {
       duplicate: 'Duplica',
       copySuffix: '(copia)',
       currentBadge: 'Corrente',
+    },
+    agent: {
+      title: 'Agent',
+      desc: 'Gestisci le capacità globali e configura i tuoi agenti.',
+      globalCapabilities: 'Capacità globali',
+      mcpServerCount: '{count} server strumenti personalizzati (MCP) connessi',
+      tools: 'Strumenti',
+      toolsCount: '{count} strumenti',
+      toolsCountWithEnabled: '{count} strumenti (abilitati {enabled})',
+      skills: 'Competenze',
+      skillsCount: '{count} competenze',
+      agents: 'Agent',
+      agentsDesc:
+        'Clicca Configura per modificare il profilo e il prompt di ciascun agent.',
+      configureAgents: 'Configura',
+      noAgents: 'Nessun agent configurato',
+      newAgent: 'Nuovo agent',
+      current: 'Corrente',
+      duplicate: 'Duplica',
+      copySuffix: '(copia)',
+      deleteConfirmTitle: 'Conferma eliminazione agent',
+      deleteConfirmMessagePrefix: 'Sei sicuro di voler eliminare agent',
+      deleteConfirmMessageSuffix: '? Questa azione non può essere annullata.',
+      toolSourceBuiltin: 'Integrato',
+      toolSourceMcp: 'MCP',
+      noMcpTools: 'Nessuno strumento personalizzato (MCP) rilevato',
+      toolsEnabledCount: '{count} abilitati',
+      manageTools: 'Gestisci strumenti',
+      descriptionColumn: 'Descrizione',
+      builtinFsListLabel: 'Leggi vault',
+      builtinFsListDesc:
+        'Elenca la struttura delle directory del vault per orientarsi rapidamente.',
+      builtinFsSearchLabel: 'Cerca nel vault',
+      builtinFsSearchDesc:
+        'Cerca file, cartelle o contenuti Markdown nel vault.',
+      builtinFsReadLabel: 'Leggi file',
+      builtinFsReadDesc:
+        'Legge intervalli di righe da uno o più file del vault.',
+      builtinFsEditLabel: 'Modifica file',
+      builtinFsEditDesc:
+        'Applica sostituzioni di testo precise in un singolo file.',
+      builtinFsWriteLabel: 'Scrivi nel vault',
+      builtinFsWriteDesc:
+        'Esegue operazioni di scrittura su file e cartelle nel vault.',
     },
     providers: {
       title: 'Provider',
@@ -434,13 +478,14 @@ export const it: TranslationKeys = {
       notStarted: 'Non iniziato',
     },
     mcp: {
-      title: 'MCP (Model Context Protocol)',
-      desc: "Gestisci i server MCP che forniscono strumenti e risorse aggiuntive all'AI.",
+      title: 'Strumenti personalizzati (MCP)',
+      desc: 'Gestisci i server MCP per configurare le capacità degli strumenti personalizzati.',
       warning:
         'Avviso: i server MCP possono eseguire codice arbitrario. Aggiungi solo server di cui ti fidi.',
-      notSupportedOnMobile: 'MCP non è supportato su mobile',
+      notSupportedOnMobile:
+        'Gli strumenti personalizzati (MCP) non sono supportati su mobile',
       mcpServers: 'Server MCP',
-      addServer: 'Aggiungi server',
+      addServer: 'Aggiungi server strumenti personalizzati (MCP)',
       serverName: 'Nome server',
       command: 'Comando',
       server: 'Server',
@@ -454,8 +499,9 @@ export const it: TranslationKeys = {
       connecting: 'Connessione in corso...',
       disconnected: 'Disconnesso',
       autoExecute: 'Esecuzione automatica',
-      deleteServer: 'Elimina server',
-      deleteServerConfirm: 'Sei sicuro di voler eliminare questo server?',
+      deleteServer: 'Elimina server strumenti personalizzati',
+      deleteServerConfirm:
+        'Sei sicuro di voler eliminare questo server di strumenti personalizzati?',
       edit: 'Modifica',
       delete: 'Elimina',
       expand: 'Espandi',
