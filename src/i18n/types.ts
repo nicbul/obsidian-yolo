@@ -111,6 +111,7 @@ export type TranslationKeys = {
       editor: string
       knowledge: string
       tools: string
+      agent: string
       others: string
     }
     supportSmartComposer: {
@@ -181,6 +182,27 @@ export type TranslationKeys = {
       duplicate?: string
       copySuffix?: string
       currentBadge?: string
+    }
+    agent?: {
+      title?: string
+      desc?: string
+      globalCapabilities?: string
+      mcpServerCount?: string
+      tools?: string
+      toolsCount?: string
+      skills?: string
+      skillsCount?: string
+      agents?: string
+      agentsDesc?: string
+      configureAgents?: string
+      noAgents?: string
+      newAgent?: string
+      current?: string
+      duplicate?: string
+      copySuffix?: string
+      deleteConfirmTitle?: string
+      deleteConfirmMessagePrefix?: string
+      deleteConfirmMessageSuffix?: string
     }
     providers: {
       title: string

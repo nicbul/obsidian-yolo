@@ -123,6 +123,7 @@ export const it: TranslationKeys = {
       editor: 'Editor',
       knowledge: 'Conoscenza',
       tools: 'Strumenti',
+      agent: 'Agent',
       others: 'Altro',
     },
     supportSmartComposer: {

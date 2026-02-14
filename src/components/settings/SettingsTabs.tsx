@@ -10,6 +10,7 @@ import React, {
 import { useLanguage } from '../../contexts/language-context'
 import SmartComposerPlugin from '../../main'
 
+import { AgentTab } from './tabs/AgentTab'
 import { ChatTab } from './tabs/ChatTab'
 import { EditorTab } from './tabs/EditorTab'
 import { KnowledgeTab } from './tabs/KnowledgeTab'
@@ -28,6 +29,7 @@ export type SettingsTabId =
   | 'editor'
   | 'knowledge'
   | 'tools'
+  | 'agent'
   | 'others'
 
 type SettingsTab = {
@@ -61,6 +63,11 @@ const SETTINGS_TABS: SettingsTab[] = [
     id: 'tools',
     labelKey: 'settings.tabs.tools',
     component: ToolsTab,
+  },
+  {
+    id: 'agent',
+    labelKey: 'settings.tabs.agent',
+    component: AgentTab,
   },
   {
     id: 'others',
