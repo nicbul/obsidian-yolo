@@ -1,4 +1,13 @@
-import { Check, Cpu, Plus, Wrench } from 'lucide-react'
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import {
+  BookOpen,
+  Copy,
+  Cpu,
+  MoreHorizontal,
+  Plus,
+  Trash2,
+  Wrench,
+} from 'lucide-react'
 import { App } from 'obsidian'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -286,26 +295,88 @@ export function AgentsSectionContent({
 
       <div className="smtcmp-agent-grid">
         {assistants.map((assistant) => (
-          <article key={assistant.id} className="smtcmp-agent-card">
+          <article
+            key={assistant.id}
+            className="smtcmp-agent-card smtcmp-agent-card--clickable"
+            role="button"
+            tabIndex={0}
+            onClick={() => openEdit(assistant)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                openEdit(assistant)
+              }
+            }}
+          >
             <div className="smtcmp-agent-card-top">
-              <div className="smtcmp-agent-avatar">
-                {renderAssistantIcon(assistant.icon, 16)}
-              </div>
-              <div className="smtcmp-agent-main">
-                <div className="smtcmp-agent-name-row">
-                  <div className="smtcmp-agent-name">{assistant.name}</div>
-                  {settings.currentAssistantId === assistant.id && (
-                    <span className="smtcmp-agent-current-badge">
-                      {t('settings.agent.current', 'Current')}
-                    </span>
+              <div className="smtcmp-agent-card-top-main">
+                <div className="smtcmp-agent-avatar">
+                  {renderAssistantIcon(assistant.icon, 16)}
+                </div>
+                <div className="smtcmp-agent-main">
+                  <div className="smtcmp-agent-name-row">
+                    <div className="smtcmp-agent-name">{assistant.name}</div>
+                    {settings.currentAssistantId === assistant.id && (
+                      <span className="smtcmp-agent-current-badge">
+                        {t('settings.agent.current', 'Current')}
+                      </span>
+                    )}
+                  </div>
+                  <div className="smtcmp-agent-persona-chip">
+                    {getPersonaLabel(assistant.persona)}
+                  </div>
+                  {assistant.description && (
+                    <div className="smtcmp-agent-desc">
+                      {assistant.description}
+                    </div>
                   )}
                 </div>
-                {assistant.description && (
-                  <div className="smtcmp-agent-desc">
-                    {assistant.description}
-                  </div>
-                )}
               </div>
+
+              <DropdownMenu.Root>
+                <DropdownMenu.Trigger
+                  className="smtcmp-agent-card-menu-trigger"
+                  aria-label={t('common.actions', 'Actions')}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <MoreHorizontal size={14} />
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content
+                    className="smtcmp-agent-card-menu-popover"
+                    align="end"
+                    sideOffset={8}
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <ul className="smtcmp-agent-card-menu-list">
+                      <DropdownMenu.Item
+                        asChild
+                        onSelect={() => {
+                          void handleDuplicate(assistant)
+                        }}
+                      >
+                        <li className="smtcmp-agent-card-menu-item">
+                          <span className="smtcmp-agent-card-menu-icon">
+                            <Copy size={16} />
+                          </span>
+                          {t('settings.agent.duplicate', 'Duplicate')}
+                        </li>
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        asChild
+                        onSelect={() => handleDelete(assistant)}
+                      >
+                        <li className="smtcmp-agent-card-menu-item smtcmp-agent-card-menu-danger">
+                          <span className="smtcmp-agent-card-menu-icon">
+                            <Trash2 size={16} />
+                          </span>
+                          {t('common.delete')}
+                        </li>
+                      </DropdownMenu.Item>
+                    </ul>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
             </div>
 
             <div className="smtcmp-agent-meta-row">
@@ -321,30 +392,12 @@ export function AgentsSectionContent({
                 )}
               </span>
               <span className="smtcmp-agent-meta-item">
-                <Check size={12} />
+                <BookOpen size={12} />
                 {t(
                   'settings.agent.editorSkillsCount',
                   '{count} skills',
                 ).replace('{count}', String(skillsEnabledCount(assistant)))}
               </span>
-            </div>
-
-            <div className="smtcmp-agent-actions">
-              <ObsidianButton
-                text={t('common.edit')}
-                onClick={() => openEdit(assistant)}
-              />
-              <ObsidianButton
-                text={t('settings.agent.duplicate', 'Duplicate')}
-                onClick={() => {
-                  void handleDuplicate(assistant)
-                }}
-              />
-              <ObsidianButton
-                text={t('common.delete')}
-                warning
-                onClick={() => handleDelete(assistant)}
-              />
             </div>
           </article>
         ))}
@@ -670,4 +723,11 @@ export function AgentsSectionContent({
       )}
     </div>
   )
+}
+const getPersonaLabel = (persona?: string): string => {
+  const value = (persona || 'balanced').trim()
+  if (!value) {
+    return 'Balanced'
+  }
+  return value.charAt(0).toUpperCase() + value.slice(1)
 }

@@ -1,4 +1,13 @@
-import { BookOpen, Bot, Cpu, Wrench } from 'lucide-react'
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
+import {
+  BookOpen,
+  Bot,
+  Copy,
+  Cpu,
+  MoreHorizontal,
+  Trash2,
+  Wrench,
+} from 'lucide-react'
 import { App } from 'obsidian'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -316,24 +325,76 @@ export function AgentSection({ app }: AgentSectionProps) {
             {assistants.map((assistant) => (
               <article key={assistant.id} className="smtcmp-agent-card">
                 <div className="smtcmp-agent-card-top">
-                  <div className="smtcmp-agent-avatar">
-                    {renderAssistantIcon(assistant.icon, 16)}
-                  </div>
-                  <div className="smtcmp-agent-main">
-                    <div className="smtcmp-agent-name-row">
-                      <div className="smtcmp-agent-name">{assistant.name}</div>
-                      {settings.currentAssistantId === assistant.id && (
-                        <span className="smtcmp-agent-current-badge">
-                          {t('settings.agent.current', 'Current')}
-                        </span>
+                  <div className="smtcmp-agent-card-top-main">
+                    <div className="smtcmp-agent-avatar">
+                      {renderAssistantIcon(assistant.icon, 16)}
+                    </div>
+                    <div className="smtcmp-agent-main">
+                      <div className="smtcmp-agent-name-row">
+                        <div className="smtcmp-agent-name">
+                          {assistant.name}
+                        </div>
+                        {settings.currentAssistantId === assistant.id && (
+                          <span className="smtcmp-agent-current-badge">
+                            {t('settings.agent.current', 'Current')}
+                          </span>
+                        )}
+                      </div>
+                      <div className="smtcmp-agent-persona-chip">
+                        {getPersonaLabel(assistant.persona)}
+                      </div>
+                      {assistant.description && (
+                        <div className="smtcmp-agent-desc">
+                          {assistant.description}
+                        </div>
                       )}
                     </div>
-                    {assistant.description && (
-                      <div className="smtcmp-agent-desc">
-                        {assistant.description}
-                      </div>
-                    )}
                   </div>
+
+                  <DropdownMenu.Root>
+                    <DropdownMenu.Trigger
+                      className="smtcmp-agent-card-menu-trigger"
+                      aria-label={t('common.actions', 'Actions')}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <MoreHorizontal size={14} />
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Portal>
+                      <DropdownMenu.Content
+                        className="smtcmp-agent-card-menu-popover"
+                        align="end"
+                        sideOffset={8}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <ul className="smtcmp-agent-card-menu-list">
+                          <DropdownMenu.Item
+                            asChild
+                            onSelect={() => {
+                              void handleDuplicateAssistant(assistant)
+                            }}
+                          >
+                            <li className="smtcmp-agent-card-menu-item">
+                              <span className="smtcmp-agent-card-menu-icon">
+                                <Copy size={16} />
+                              </span>
+                              {t('settings.agent.duplicate', 'Duplicate')}
+                            </li>
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Item
+                            asChild
+                            onSelect={() => handleDeleteAssistant(assistant)}
+                          >
+                            <li className="smtcmp-agent-card-menu-item smtcmp-agent-card-menu-danger">
+                              <span className="smtcmp-agent-card-menu-icon">
+                                <Trash2 size={16} />
+                              </span>
+                              {t('common.delete')}
+                            </li>
+                          </DropdownMenu.Item>
+                        </ul>
+                      </DropdownMenu.Content>
+                    </DropdownMenu.Portal>
+                  </DropdownMenu.Root>
                 </div>
 
                 <div className="smtcmp-agent-meta-row">
@@ -347,24 +408,10 @@ export function AgentSection({ app }: AgentSectionProps) {
                       ? `${assistant.enabledToolNames?.length ?? 0} tools`
                       : '0 tools'}
                   </span>
-                </div>
-
-                <div className="smtcmp-agent-actions">
-                  <ObsidianButton
-                    text={t('common.edit')}
-                    onClick={handleOpenAssistantsModal}
-                  />
-                  <ObsidianButton
-                    text={t('settings.agent.duplicate', 'Duplicate')}
-                    onClick={() => {
-                      void handleDuplicateAssistant(assistant)
-                    }}
-                  />
-                  <ObsidianButton
-                    text={t('common.delete')}
-                    warning
-                    onClick={() => handleDeleteAssistant(assistant)}
-                  />
+                  <span className="smtcmp-agent-meta-item">
+                    <BookOpen size={12} />
+                    {`${assistant.enabledSkills?.length ?? 0} skills`}
+                  </span>
                 </div>
               </article>
             ))}
@@ -373,4 +420,11 @@ export function AgentSection({ app }: AgentSectionProps) {
       </section>
     </div>
   )
+}
+const getPersonaLabel = (persona?: string): string => {
+  const value = (persona || 'balanced').trim()
+  if (!value) {
+    return 'Balanced'
+  }
+  return value.charAt(0).toUpperCase() + value.slice(1)
 }
