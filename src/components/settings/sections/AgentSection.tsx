@@ -1,13 +1,5 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import {
-  BookOpen,
-  Bot,
-  Copy,
-  Cpu,
-  MoreHorizontal,
-  Trash2,
-  Wrench,
-} from 'lucide-react'
+import { BookOpen, Bot, Copy, Cpu, Trash2, Wrench } from 'lucide-react'
 import { App } from 'obsidian'
 import { useEffect, useMemo, useState } from 'react'
 
@@ -354,11 +346,6 @@ export function AgentSection({ app }: AgentSectionProps) {
                         <div className="smtcmp-agent-name">
                           {assistant.name}
                         </div>
-                        {settings.currentAssistantId === assistant.id && (
-                          <span className="smtcmp-agent-current-badge">
-                            {t('settings.agent.current', 'Current')}
-                          </span>
-                        )}
                       </div>
                       {assistant.description && (
                         <div className="smtcmp-agent-desc">
@@ -371,10 +358,14 @@ export function AgentSection({ app }: AgentSectionProps) {
                   <DropdownMenu.Root>
                     <DropdownMenu.Trigger
                       className="smtcmp-agent-card-menu-trigger"
-                      aria-label={t('common.actions', 'Actions')}
                       onClick={(event) => event.stopPropagation()}
                     >
-                      <MoreHorizontal size={14} />
+                      <span
+                        className="smtcmp-agent-card-menu-trigger-dots"
+                        aria-hidden="true"
+                      >
+                        ...
+                      </span>
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Portal>
                       <DropdownMenu.Content

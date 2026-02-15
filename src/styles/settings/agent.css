@@ -282,21 +282,20 @@
 }
 
 .smtcmp-agent-card-menu-trigger {
-  width: 36px;
-  height: 36px;
-  border: none;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--interactive-accent) 90%, black 10%);
-  color: var(--text-on-accent);
+  width: 32px;
+  height: 32px;
+  border: none !important;
+  border-radius: 8px;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: var(--text-muted);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   opacity: 0;
   pointer-events: none;
-  box-shadow:
-    0 6px 14px -8px color-mix(in srgb, var(--interactive-accent) 55%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 20%, transparent);
+  box-shadow: none !important;
   transition:
     opacity 120ms ease,
     color 120ms ease,
@@ -317,23 +316,42 @@
   outline-offset: 2px;
 }
 
-.smtcmp-agent-card-menu-trigger svg {
-  width: 15px;
-  height: 15px;
-  stroke-width: 2.6;
+.smtcmp-agent-card-menu-trigger-dots {
+  display: inline-block;
+  font-size: 16px !important;
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: 1.2px;
+  transform: translateY(-3px);
 }
 
 .smtcmp-agent-card-menu-trigger:hover {
   transform: translateY(-1px);
-  background: color-mix(in srgb, var(--interactive-accent) 96%, white 4%);
+  border: 1px solid
+    color-mix(in srgb, var(--interactive-accent) 50%, transparent) !important;
+  background: color-mix(
+    in srgb,
+    var(--interactive-accent) 96%,
+    white 4%
+  ) !important;
+  background-color: color-mix(
+    in srgb,
+    var(--interactive-accent) 96%,
+    white 4%
+  ) !important;
+  box-shadow:
+    0 6px 14px -8px color-mix(in srgb, var(--interactive-accent) 55%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 20%, transparent) !important;
+  color: var(--text-on-accent);
 }
 
 .smtcmp-agent-card-menu-popover {
   z-index: 1100;
-  min-width: 220px;
+  min-width: 140px;
+  width: max-content;
   background: color-mix(in srgb, var(--background-secondary) 96%, transparent);
   border: 1px solid var(--background-modifier-border);
-  border-radius: 12px;
+  border-radius: 10px;
   box-shadow:
     0 14px 32px rgba(0, 0, 0, 0.22),
     0 0 0 1px
@@ -344,17 +362,17 @@
 .smtcmp-agent-card-menu-list {
   list-style: none;
   margin: 0;
-  padding: 8px;
+  padding: 6px;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
 .smtcmp-agent-card-menu-item {
-  min-height: 44px;
+  min-height: 38px;
   margin: 0;
-  padding: 12px 14px;
-  border-radius: 10px;
+  padding: 9px 12px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -375,8 +393,8 @@
 }
 
 .smtcmp-agent-card-menu-icon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
