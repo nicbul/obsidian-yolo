@@ -139,18 +139,6 @@ export function AgentsSectionContent({
     return model?.name || draftAgent.modelId
   }, [draftAgent?.modelId, settings.chatModelId, settings.chatModels])
 
-  const openCreate = () => {
-    const draft = createNewAgent(settings.chatModelId)
-    draft.name = t('settings.agent.editorDefaultName', 'New agent')
-    setDraftAgent(draft)
-    setActiveTab('profile')
-  }
-
-  const openEdit = (assistant: Assistant) => {
-    setDraftAgent(toDraftAgent(assistant, settings.chatModelId))
-    setActiveTab('profile')
-  }
-
   useEffect(() => {
     if (!initialAssistantId || draftAgent) {
       return
