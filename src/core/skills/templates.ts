@@ -4,11 +4,11 @@ export const YOLO_SKILLS_INDEX_TEMPLATE = `# YOLO Skills
 
 Store your skill files here.
 
-- Skill file pattern: \`*.skill.md\`
+- Skill file pattern: \`*.md\` (exclude \`Skills.md\`)
 - Required frontmatter: \`id\`, \`name\`, \`description\`
 
 Suggested starter skill:
-- \`skill-creator.skill.md\`
+- \`skill-creator.md\`
 `
 
 export const YOLO_SKILL_CREATOR_TEMPLATE = `---
@@ -58,17 +58,17 @@ Obsidian vaults contain the user's real data. Prefer minimal edits, explicit ver
 
 ## Anatomy of a Skill
 
-Every YOLO skill is a single \`.skill.md\` file stored in the vault's \`YOLO/skills/\` folder:
+Every YOLO skill is a single \`.md\` file stored in the vault's \`YOLO/skills/\` folder:
 
 ~~~
 YOLO/skills/
-├── skill-creator.skill.md
-├── meeting-notes.skill.md
-├── pdf-editor.skill.md
+├── skill-creator.md
+├── meeting-notes.md
+├── pdf-editor.md
 └── ...
 ~~~
 
-Each \`.skill.md\` file consists of two parts:
+Each skill \`.md\` file consists of two parts:
 
 ### Frontmatter (YAML, required)
 
@@ -129,12 +129,12 @@ Key principle: When a skill supports multiple variations or domains, split into 
 ~~~
 # Instead of one monolithic "data-analysis" skill:
 YOLO/skills/
-├── bigquery-finance.skill.md
-├── bigquery-sales.skill.md
-└── bigquery-product.skill.md
+├── bigquery-finance.md
+├── bigquery-sales.md
+└── bigquery-product.md
 ~~~
 
-This way, when the user asks about sales metrics, only \`bigquery-sales.skill.md\` activates and loads.
+This way, when the user asks about sales metrics, only \`bigquery-sales.md\` activates and loads.
 
 ## Available Tools
 
@@ -220,8 +220,8 @@ Body guidelines:
 Always preview before committing:
 
 ~~~
-fs_write YOLO/skills/<skill-id>.skill.md  (dryRun: true)   -> preview
-fs_write YOLO/skills/<skill-id>.skill.md                     -> commit
+fs_write YOLO/skills/<skill-id>.md  (dryRun: true)   -> preview
+fs_write YOLO/skills/<skill-id>.md                     -> commit
 ~~~
 
 For updates to existing skills, prefer \`fs_edit\` to make minimal, targeted changes rather than rewriting the entire file.

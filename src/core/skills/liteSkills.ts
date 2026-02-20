@@ -16,7 +16,7 @@ export type LiteSkillDocument = {
 }
 
 const SKILL_DIR_PREFIX = 'YOLO/skills/'
-const SKILL_FILE_SUFFIX = '.skill.md'
+const SKILL_INDEX_FILE_NAME = 'Skills.md'
 
 const normalizeSkillMode = (value: unknown): LiteSkillMode => {
   if (typeof value !== 'string') {
@@ -107,7 +107,8 @@ const toLiteSkillEntry = ({
 const isLiteSkillFile = (file: TFile): boolean => {
   return (
     file.path.startsWith(SKILL_DIR_PREFIX) &&
-    file.path.toLowerCase().endsWith(SKILL_FILE_SUFFIX)
+    file.extension === 'md' &&
+    file.name !== SKILL_INDEX_FILE_NAME
   )
 }
 

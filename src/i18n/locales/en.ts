@@ -293,11 +293,11 @@ export const en: TranslationKeys = {
       skillsCount: '{count} skills',
       skillsCountWithEnabled: '{count} skills (enabled {enabled})',
       skillsGlobalDesc:
-        'Skills are discovered from YOLO/skills/**/*.skill.md. Disable a skill here to block it for all agents.',
-      skillsSourcePath: 'Path: YOLO/skills/**/*.skill.md',
+        'Skills are discovered from YOLO/skills/**/*.md (excluding Skills.md). Disable a skill here to block it for all agents.',
+      skillsSourcePath: 'Path: YOLO/skills/**/*.md (excluding Skills.md)',
       refreshSkills: 'Refresh',
       skillsEmptyHint:
-        'No skills found. Create markdown skills under YOLO/skills.',
+        'No skills found. Create skill markdown files under YOLO/skills (excluding Skills.md).',
       createSkillTemplates: 'Initialize Skills system',
       skillsTemplateCreated: 'Skills system initialized in YOLO/skills.',
       agents: 'Agents',

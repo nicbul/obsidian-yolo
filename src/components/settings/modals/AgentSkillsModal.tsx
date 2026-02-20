@@ -97,9 +97,7 @@ function AgentSkillsModalContent({
   const handleInitializeSkillsSystem = async () => {
     const skillsDir = normalizePath(YOLO_SKILLS_DIR)
     const indexPath = normalizePath(`${skillsDir}/Skills.md`)
-    const skillCreatorPath = normalizePath(
-      `${skillsDir}/skill-creator.skill.md`,
-    )
+    const skillCreatorPath = normalizePath(`${skillsDir}/skill-creator.md`)
 
     try {
       const maybeFolder = app.vault.getAbstractFileByPath(skillsDir)
@@ -134,7 +132,7 @@ function AgentSkillsModalContent({
       <div className="smtcmp-settings-desc smtcmp-settings-callout">
         {t(
           'settings.agent.skillsGlobalDesc',
-          'Skills are discovered from YOLO/skills/**/*.skill.md. Disable a skill here to block it for all agents.',
+          'Skills are discovered from YOLO/skills/**/*.md (excluding Skills.md). Disable a skill here to block it for all agents.',
         )}
       </div>
 
@@ -142,7 +140,7 @@ function AgentSkillsModalContent({
         <div className="smtcmp-settings-desc">
           {t(
             'settings.agent.skillsSourcePath',
-            'Path: YOLO/skills/**/*.skill.md',
+            'Path: YOLO/skills/**/*.md (excluding Skills.md)',
           )}
         </div>
         <div className="smtcmp-agent-skills-toolbar-actions">
