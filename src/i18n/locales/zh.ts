@@ -770,6 +770,7 @@ export const zh: TranslationKeys = {
         fs_read: '读取文件',
         fs_edit: '编辑文件',
         fs_write: '文件操作',
+        open_skill: '加载技能',
       },
       writeAction: {
         create_file: '创建文件',

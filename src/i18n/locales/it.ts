@@ -845,6 +845,7 @@ export const it: TranslationKeys = {
         fs_read: 'Leggi file',
         fs_edit: 'Modifica file',
         fs_write: 'Operazione file',
+        open_skill: 'Apri skill',
       },
       writeAction: {
         create_file: 'Crea file',

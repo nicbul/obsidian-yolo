@@ -711,6 +711,7 @@ export type TranslationKeys = {
         fs_read?: string
         fs_edit?: string
         fs_write?: string
+        open_skill?: string
       }
       writeAction?: {
         create_file?: string

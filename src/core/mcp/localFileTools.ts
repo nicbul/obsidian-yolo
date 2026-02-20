@@ -1,5 +1,9 @@
 import { App, TFile, TFolder, normalizePath } from 'obsidian'
 
+import {
+  getLiteSkillDocument,
+  listLiteSkillEntries,
+} from '../skills/liteSkills'
 import { McpTool } from '../../types/mcp.types'
 import { ToolCallResponseStatus } from '../../types/tool-call.types'
 
@@ -19,6 +23,7 @@ type LocalFileToolName =
   | 'fs_read'
   | 'fs_edit'
   | 'fs_write'
+  | 'open_skill'
 type FsSearchScope = 'files' | 'dirs' | 'content' | 'all'
 type FsListScope = 'files' | 'dirs' | 'all'
 type FsWriteAction =
@@ -263,6 +268,24 @@ export function getLocalFileTools(): McpTool[] {
           },
         },
         required: ['action', 'items'],
+      },
+    },
+    {
+      name: 'open_skill',
+      description:
+        'Load a lite skill from YOLO/skills by id or name and return full markdown content.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            description: 'Skill id from frontmatter.',
+          },
+          name: {
+            type: 'string',
+            description: 'Skill name from frontmatter.',
+          },
+        },
       },
     },
   ]
@@ -549,12 +572,13 @@ const createLooseEditRegex = (oldText: string): RegExp => {
 
 const countRegexMatches = (content: string, regex: RegExp): number => {
   let count = 0
-  let match: RegExpExecArray | null
-  while ((match = regex.exec(content)) !== null) {
+  let match = regex.exec(content)
+  while (match !== null) {
     count += 1
     if (match[0].length === 0) {
       regex.lastIndex += 1
     }
+    match = regex.exec(content)
   }
   return count
 }
@@ -1295,6 +1319,34 @@ export async function callLocalFileTool({
               failed: errorCount,
             },
             results,
+          }),
+        }
+      }
+
+      case 'open_skill': {
+        const id = getOptionalTextArg(args, 'id')?.trim()
+        const name = getOptionalTextArg(args, 'name')?.trim()
+
+        if (!id && !name) {
+          throw new Error('Either id or name is required.')
+        }
+
+        const skill = await getLiteSkillDocument({ app, id, name })
+        if (!skill) {
+          throw new Error(`Skill not found. id=${id ?? ''} name=${name ?? ''}`)
+        }
+
+        const allSkills = listLiteSkillEntries(app)
+
+        return {
+          status: ToolCallResponseStatus.Success,
+          text: formatJsonResult({
+            tool: 'open_skill',
+            skill: skill.entry,
+            summary: {
+              availableSkills: allSkills.length,
+            },
+            content: skill.content,
           }),
         }
       }

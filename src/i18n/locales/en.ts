@@ -819,6 +819,7 @@ export const en: TranslationKeys = {
         fs_read: 'Read files',
         fs_edit: 'Edit file',
         fs_write: 'File operation',
+        open_skill: 'Open skill',
       },
       writeAction: {
         create_file: 'Create file',
