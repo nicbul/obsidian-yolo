@@ -1,7 +1,7 @@
 import debounce from 'lodash.debounce'
 import isEqual from 'lodash.isequal'
 import { App } from 'obsidian'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { editorStateToPlainText } from '../components/chat-view/chat-input/utils/editor-state-to-plain-text'
 import { DEFAULT_CHAT_TITLE_PROMPT } from '../constants'
@@ -10,7 +10,11 @@ import { useLanguage } from '../contexts/language-context'
 import { useSettings } from '../contexts/settings-context'
 import { getChatModelClient } from '../core/llm/manager'
 import { ChatConversationMetadata } from '../database/json/chat/types'
-import { ChatMessage, SerializedChatMessage } from '../types/chat'
+import {
+  ChatAssistantMessage,
+  ChatMessage,
+  SerializedChatMessage,
+} from '../types/chat'
 import { ConversationOverrideSettings } from '../types/conversation-settings.types'
 import { Mentionable } from '../types/mentionable'
 import {
@@ -19,6 +23,27 @@ import {
 } from '../utils/chat/mentionable'
 
 import { useChatManager } from './useJsonManagers'
+
+const DEFAULT_UNTITLED_CONVERSATION_TITLE = '新对话'
+const LEGACY_UNTITLED_CONVERSATION_TITLES = new Set([
+  '新消息',
+  DEFAULT_UNTITLED_CONVERSATION_TITLE,
+])
+const AUTO_TITLE_TIMEOUT_MS = 10000
+const AUTO_TITLE_MAX_RETRIES = 2
+const AUTO_TITLE_FAILURE_COOLDOWN_MS = 5 * 60 * 1000
+const AUTO_TITLE_INPUT_MAX_LENGTH = 1200
+
+const isUntitledConversationTitle = (title: string): boolean =>
+  LEGACY_UNTITLED_CONVERSATION_TITLES.has(title)
+
+const truncateForTitleInput = (text: string): string => {
+  const normalized = text.trim()
+  if (normalized.length <= AUTO_TITLE_INPUT_MAX_LENGTH) {
+    return normalized
+  }
+  return `${normalized.slice(0, AUTO_TITLE_INPUT_MAX_LENGTH)}...`
+}
 
 type UseChatHistory = {
   createOrUpdateConversation: (
@@ -49,6 +74,8 @@ export function useChatHistory(): UseChatHistory {
   const { language } = useLanguage()
   const chatManager = useChatManager()
   const [chatList, setChatList] = useState<ChatConversationMetadata[]>([])
+  const titleGenerationInFlightRef = useRef<Set<string>>(new Set())
+  const titleGenerationCooldownUntilRef = useRef<Map<string, number>>(new Map())
 
   const fetchChatList = useCallback(async () => {
     const list = await chatManager.listChats()
@@ -105,8 +132,8 @@ export function useChatHistory(): UseChatHistory {
               reasoningLevel,
             })
           } else {
-            // 默认标题统一为"新消息"，待第一轮模型回答完成后由工具模型自动改名
-            const defaultTitle = '新消息'
+            // 默认标题统一为"新对话"，待第一轮模型回答完成后由工具模型自动改名
+            const defaultTitle = DEFAULT_UNTITLED_CONVERSATION_TITLE
 
             await chatManager.createChat({
               id,
@@ -221,103 +248,147 @@ export function useChatHistory(): UseChatHistory {
 
   const generateConversationTitle = useCallback(
     async (id: string, messages: ChatMessage[]): Promise<void> => {
-      // 等待对话存在（最多等待 2 秒，每 200ms 检查一次）
-      // 这是为了处理 debounce 导致的保存延迟
-      let conversation = null
-      for (let i = 0; i < 10; i++) {
-        conversation = await chatManager.findById(id)
-        if (conversation) break
-        await new Promise((resolve) => setTimeout(resolve, 200))
-      }
-
-      if (!conversation) {
+      const cooldownUntil = titleGenerationCooldownUntilRef.current.get(id) ?? 0
+      if (cooldownUntil > Date.now()) {
         return
       }
 
-      // 如果标题已经不是"新消息"，说明已经命名过了，不需要再次命名
-      if (conversation.title !== '新消息') {
+      if (titleGenerationInFlightRef.current.has(id)) {
         return
       }
+      titleGenerationInFlightRef.current.add(id)
 
-      // 只需要用户消息即可生成标题
-      const firstUserMessage = messages.find((v) => v.role === 'user')
-      if (!firstUserMessage) {
-        return
-      }
-
-      // 使用用户的第一条消息来生成标题
-      const userText = firstUserMessage.content
-        ? editorStateToPlainText(firstUserMessage.content)
-        : ''
-
-      if (!userText || userText.trim().length === 0) {
-        return
-      }
-
-      // 标题生成核心逻辑，支持重试
-      const attemptGenerateTitle = async (
-        retryCount: number = 0,
-      ): Promise<string | null> => {
-        const MAX_RETRIES = 2
-        const TIMEOUT_MS = 10000 // 10秒超时
-
-        try {
-          const controller = new AbortController()
-          const timer = setTimeout(() => controller.abort(), TIMEOUT_MS)
-
-          const { providerClient, model } = getChatModelClient({
-            settings,
-            modelId: settings.applyModelId,
-          })
-
-          const defaultTitlePrompt =
-            DEFAULT_CHAT_TITLE_PROMPT[language] ?? DEFAULT_CHAT_TITLE_PROMPT.en
-          const customizedPrompt = (
-            settings.chatOptions.chatTitlePrompt ?? ''
-          ).trim()
-          const systemPrompt =
-            customizedPrompt.length > 0 ? customizedPrompt : defaultTitlePrompt
-
-          const response = await providerClient.generateResponse(
-            model,
-            {
-              model: model.model,
-              messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userText },
-              ],
-              stream: false,
-            },
-            { signal: controller.signal },
-          )
-          clearTimeout(timer)
-
-          const generated = response.choices?.[0]?.message?.content ?? ''
-          const nextTitle = (generated || '')
-            .trim()
-            .replace(/^["'""'']+|["'""'']+$/g, '')
-
-          return nextTitle || null
-        } catch {
-          // 如果还有重试次数，则重试
-          if (retryCount < MAX_RETRIES) {
-            return attemptGenerateTitle(retryCount + 1)
-          }
-          return null
+      try {
+        // 等待对话存在（最多等待 2 秒，每 200ms 检查一次）
+        // 这是为了处理 debounce 导致的保存延迟
+        let conversation = null
+        for (let i = 0; i < 10; i++) {
+          conversation = await chatManager.findById(id)
+          if (conversation) break
+          await new Promise((resolve) => setTimeout(resolve, 200))
         }
-      }
 
-      void (async () => {
+        if (!conversation) {
+          return
+        }
+
+        // 如果标题已经命名过了，不需要再次命名
+        if (!isUntitledConversationTitle(conversation.title)) {
+          return
+        }
+
+        const firstUserMessage = messages.find(
+          (message) => message.role === 'user',
+        )
+        if (!firstUserMessage) {
+          return
+        }
+
+        const userText = firstUserMessage.content
+          ? editorStateToPlainText(firstUserMessage.content)
+          : ''
+        if (!userText || userText.trim().length === 0) {
+          return
+        }
+
+        // 首轮助手回复完成后再触发命名
+        const firstCompletedAssistantMessage = messages.find(
+          (message): message is ChatAssistantMessage =>
+            message.role === 'assistant' &&
+            (message.metadata?.generationState ?? 'completed') ===
+              'completed' &&
+            message.content.trim().length > 0,
+        )
+
+        if (!firstCompletedAssistantMessage) {
+          return
+        }
+
+        const titleInput = [
+          `User first message:\n${truncateForTitleInput(userText)}`,
+          `Assistant first response:\n${truncateForTitleInput(
+            firstCompletedAssistantMessage.content,
+          )}`,
+        ].join('\n\n')
+
+        const attemptGenerateTitle = async (
+          retryCount: number = 0,
+        ): Promise<string | null> => {
+          const controller = new AbortController()
+          const timer = setTimeout(
+            () => controller.abort(),
+            AUTO_TITLE_TIMEOUT_MS,
+          )
+
+          try {
+            const { providerClient, model } = getChatModelClient({
+              settings,
+              modelId: settings.applyModelId,
+            })
+
+            const defaultTitlePrompt =
+              DEFAULT_CHAT_TITLE_PROMPT[language] ??
+              DEFAULT_CHAT_TITLE_PROMPT.en
+            const customizedPrompt = (
+              settings.chatOptions.chatTitlePrompt ?? ''
+            ).trim()
+            const systemPrompt =
+              customizedPrompt.length > 0
+                ? customizedPrompt
+                : defaultTitlePrompt
+
+            const response = await providerClient.generateResponse(
+              model,
+              {
+                model: model.model,
+                messages: [
+                  { role: 'system', content: systemPrompt },
+                  { role: 'user', content: titleInput },
+                ],
+                stream: false,
+              },
+              { signal: controller.signal },
+            )
+
+            const generated = response.choices?.[0]?.message?.content ?? ''
+            const nextTitle = (generated || '')
+              .trim()
+              .replace(/^["']+|["']+$/g, '')
+            return nextTitle || null
+          } catch {
+            if (retryCount < AUTO_TITLE_MAX_RETRIES) {
+              const backoffMs = 300 * (retryCount + 1)
+              await new Promise((resolve) => setTimeout(resolve, backoffMs))
+              return attemptGenerateTitle(retryCount + 1)
+            }
+            return null
+          } finally {
+            clearTimeout(timer)
+          }
+        }
+
         const generatedTitle = await attemptGenerateTitle()
-        if (!generatedTitle) return
+        if (!generatedTitle) {
+          titleGenerationCooldownUntilRef.current.set(
+            id,
+            Date.now() + AUTO_TITLE_FAILURE_COOLDOWN_MS,
+          )
+          return
+        }
+        titleGenerationCooldownUntilRef.current.delete(id)
 
-        // 再次检查标题是否仍为"新消息"，避免竞态条件
+        // 再次检查标题是否仍为默认标题，避免竞态条件
         const currentConversation = await chatManager.findById(id)
-        if (currentConversation && currentConversation.title === '新消息') {
+        if (
+          currentConversation &&
+          isUntitledConversationTitle(currentConversation.title)
+        ) {
           await chatManager.updateChat(id, { title: generatedTitle })
           await fetchChatList()
         }
-      })()
+      } finally {
+        titleGenerationInFlightRef.current.delete(id)
+      }
     },
     [chatManager, fetchChatList, language, settings],
   )

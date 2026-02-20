@@ -820,20 +820,15 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
     if (submitMutationPendingRef.current) {
       submitMutationPendingRef.current = false
       void persistConversation(chatMessages)
+      void generateConversationTitle(currentConversationId, chatMessages)
     }
-  }, [chatMessages, persistConversation, submitChatMutation.isPending])
-
-  // 用户首次发送消息后自动生成对话标题
-  // 不需要等待模型回答，只要有用户消息就触发
-  // generateConversationTitle 内部会检查标题是否已经命名过
-  useEffect(() => {
-    if (chatMessages.length > 0 && currentConversationId) {
-      const hasUserMessage = chatMessages.some((m) => m.role === 'user')
-      if (hasUserMessage) {
-        void generateConversationTitle(currentConversationId, chatMessages)
-      }
-    }
-  }, [chatMessages, currentConversationId, generateConversationTitle])
+  }, [
+    chatMessages,
+    currentConversationId,
+    generateConversationTitle,
+    persistConversation,
+    submitChatMutation.isPending,
+  ])
 
   const handleActiveLeafChange = useCallback(() => {
     setActiveFile(app.workspace.getActiveFile())
