@@ -119,7 +119,6 @@ export const it: TranslationKeys = {
     title: 'Impostazioni Yolo',
     tabs: {
       models: 'Modelli',
-      chat: 'Chat',
       editor: 'Editor',
       knowledge: 'Conoscenza',
       tools: 'Strumenti',

@@ -11,7 +11,6 @@ import { useLanguage } from '../../contexts/language-context'
 import SmartComposerPlugin from '../../main'
 
 import { AgentTab } from './tabs/AgentTab'
-import { ChatTab } from './tabs/ChatTab'
 import { EditorTab } from './tabs/EditorTab'
 import { KnowledgeTab } from './tabs/KnowledgeTab'
 import { ModelsTab } from './tabs/ModelsTab'
@@ -24,7 +23,6 @@ type SettingsTabsProps = {
 
 export type SettingsTabId =
   | 'models'
-  | 'chat'
   | 'editor'
   | 'knowledge'
   | 'agent'
@@ -43,9 +41,9 @@ const SETTINGS_TABS: SettingsTab[] = [
     component: ModelsTab,
   },
   {
-    id: 'chat',
-    labelKey: 'settings.tabs.chat',
-    component: ChatTab,
+    id: 'agent',
+    labelKey: 'settings.tabs.agent',
+    component: AgentTab,
   },
   {
     id: 'editor',
@@ -56,11 +54,6 @@ const SETTINGS_TABS: SettingsTab[] = [
     id: 'knowledge',
     labelKey: 'settings.tabs.knowledge',
     component: KnowledgeTab,
-  },
-  {
-    id: 'agent',
-    labelKey: 'settings.tabs.agent',
-    component: AgentTab,
   },
   {
     id: 'others',
@@ -78,6 +71,9 @@ export function SettingsTabs({ app, plugin }: SettingsTabsProps) {
     const stored = app.loadLocalStorage(STORAGE_KEY)
     if (stored === 'tools') {
       return 'agent'
+    }
+    if (stored === 'chat') {
+      return 'editor'
     }
     if (stored && SETTINGS_TABS.some((tab) => tab.id === stored)) {
       return stored as SettingsTabId

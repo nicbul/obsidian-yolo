@@ -107,7 +107,6 @@ export type TranslationKeys = {
     title: string
     tabs: {
       models: string
-      chat: string
       editor: string
       knowledge: string
       tools: string

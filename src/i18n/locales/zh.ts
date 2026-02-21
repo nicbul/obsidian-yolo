@@ -97,7 +97,6 @@ export const zh: TranslationKeys = {
     title: 'YOLO 设置',
     tabs: {
       models: '模型',
-      chat: '聊天',
       editor: '编辑器',
       knowledge: '知识库',
       tools: '工具',

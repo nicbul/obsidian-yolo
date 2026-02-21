@@ -119,7 +119,6 @@ export const en: TranslationKeys = {
     title: 'Yolo settings',
     tabs: {
       models: 'Models',
-      chat: 'Chat',
       editor: 'Editor',
       knowledge: 'Knowledge',
       tools: 'Tools',
