@@ -323,13 +323,28 @@ export const zh: TranslationKeys = {
       editorEnabled: '已启用',
       editorDisabled: '已禁用',
       editorModel: '模型',
+      editorModelDesc: '选择此 Agent 使用的模型',
       editorModelCurrent: '当前：{model}',
+      editorModelSampling: '采样参数',
+      editorModelResetDefaults: '恢复默认值',
+      modelPresetFocused: '专注',
+      modelPresetBalanced: '平衡',
+      modelPresetCreative: '创意',
       editorTemperature: '温度',
       editorTemperatureDesc: '0.0 - 2.0',
       editorTopP: 'Top P',
       editorTopPDesc: '0.0 - 1.0',
       editorMaxOutputTokens: '最大输出 token',
       editorMaxOutputTokensDesc: '最大生成 token 数',
+      editorModelHintCreative:
+        '当前采样偏发散，回复会更有创造性，但稳定性会下降。',
+      editorModelHintFocused:
+        '当前采样偏保守，适合结构化任务，但表达多样性会降低。',
+      editorModelHintTokenCost:
+        '最大输出 token 较高，长回答更完整，但会显著增加消耗。',
+      editorModelHintTokenShort: '最大输出 token 偏低，回答可能提前截断。',
+      editorModelHintBalanced:
+        '当前参数较均衡，适合大多数通用问答与工具调用场景。',
       editorToolsCount: '{count} 个工具',
       editorSkillsCount: '{count} 个技能',
       editorSkillsCountWithEnabled: '{count} 个技能（已启用 {enabled} 个）',

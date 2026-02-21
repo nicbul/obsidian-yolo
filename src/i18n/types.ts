@@ -252,13 +252,24 @@ export type TranslationKeys = {
       editorEnabled?: string
       editorDisabled?: string
       editorModel?: string
+      editorModelDesc?: string
       editorModelCurrent?: string
+      editorModelSampling?: string
+      editorModelResetDefaults?: string
+      modelPresetFocused?: string
+      modelPresetBalanced?: string
+      modelPresetCreative?: string
       editorTemperature?: string
       editorTemperatureDesc?: string
       editorTopP?: string
       editorTopPDesc?: string
       editorMaxOutputTokens?: string
       editorMaxOutputTokensDesc?: string
+      editorModelHintCreative?: string
+      editorModelHintFocused?: string
+      editorModelHintTokenCost?: string
+      editorModelHintTokenShort?: string
+      editorModelHintBalanced?: string
       editorToolsCount?: string
       editorSkillsCount?: string
       editorSkillsCountWithEnabled?: string

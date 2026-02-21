@@ -356,13 +356,29 @@ export const en: TranslationKeys = {
       editorEnabled: 'Enabled',
       editorDisabled: 'Disabled',
       editorModel: 'Model',
+      editorModelDesc: 'Select the model used by this agent',
       editorModelCurrent: 'Current: {model}',
+      editorModelSampling: 'Sampling parameters',
+      editorModelResetDefaults: 'Restore defaults',
+      modelPresetFocused: 'Focused',
+      modelPresetBalanced: 'Balanced',
+      modelPresetCreative: 'Creative',
       editorTemperature: 'Temperature',
       editorTemperatureDesc: '0.0 - 2.0',
       editorTopP: 'Top P',
       editorTopPDesc: '0.0 - 1.0',
       editorMaxOutputTokens: 'Max output tokens',
       editorMaxOutputTokensDesc: 'Maximum generated tokens',
+      editorModelHintCreative:
+        'Sampling is highly diverse now: responses can be more creative but less stable.',
+      editorModelHintFocused:
+        'Sampling is conservative now: good for structured tasks, with less variety.',
+      editorModelHintTokenCost:
+        'Max output tokens is high: long answers are more complete but cost increases noticeably.',
+      editorModelHintTokenShort:
+        'Max output tokens is low: answers may be cut off early.',
+      editorModelHintBalanced:
+        'Current settings are balanced for most chat and tool-calling scenarios.',
       editorToolsCount: '{count} tools',
       editorSkillsCount: '{count} skills',
       editorSkillsCountWithEnabled: '{count} skills (enabled {enabled})',

@@ -33,6 +33,7 @@ import { ObsidianSetting } from '../../common/ObsidianSetting'
 import { ObsidianTextArea } from '../../common/ObsidianTextArea'
 import { ObsidianTextInput } from '../../common/ObsidianTextInput'
 import { ObsidianToggle } from '../../common/ObsidianToggle'
+import { SimpleSelect } from '../../common/SimpleSelect'
 import { openIconPicker } from '../assistants/AssistantIconPicker'
 
 type AgentsSectionContentProps = {
@@ -114,6 +115,24 @@ const AGENT_EDITOR_TAB_ICONS = {
 
 const DEFAULT_PERSONA: AgentPersona = 'balanced'
 
+const AGENT_MODEL_DEFAULTS = {
+  temperature: 0.7,
+  topP: 0.9,
+  maxOutputTokens: 4096,
+} as const
+
+function clampTemperature(value: number): number {
+  return Math.min(2, Math.max(0, value))
+}
+
+function clampTopP(value: number): number {
+  return Math.min(1, Math.max(0, value))
+}
+
+function clampMaxOutputTokens(value: number): number {
+  return Math.max(1, Math.floor(value))
+}
+
 function createNewAgent(defaultModelId: string): Assistant {
   return {
     id: crypto.randomUUID(),
@@ -127,9 +146,9 @@ function createNewAgent(defaultModelId: string): Assistant {
     enabledToolNames: [],
     enabledSkills: [],
     skillPreferences: {},
-    temperature: 0.7,
-    topP: 0.9,
-    maxOutputTokens: 4096,
+    temperature: undefined,
+    topP: undefined,
+    maxOutputTokens: undefined,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   }
@@ -148,9 +167,9 @@ function toDraftAgent(
     skillPreferences: assistant.skillPreferences ?? {},
     enableTools: assistant.enableTools ?? true,
     includeBuiltinTools: assistant.includeBuiltinTools ?? true,
-    temperature: assistant.temperature ?? 0.7,
-    topP: assistant.topP ?? 0.9,
-    maxOutputTokens: assistant.maxOutputTokens ?? 4096,
+    temperature: assistant.temperature,
+    topP: assistant.topP,
+    maxOutputTokens: assistant.maxOutputTokens,
   }
 }
 
@@ -198,6 +217,15 @@ export function AgentsSectionContent({
   })
   const [activeTab, setActiveTab] = useState<AgentEditorTab>('profile')
   const [availableTools, setAvailableTools] = useState<McpTool[]>([])
+  const [modelParamCache, setModelParamCache] = useState<{
+    temperature: number
+    topP: number
+    maxOutputTokens: number
+  }>(() => ({
+    temperature: AGENT_MODEL_DEFAULTS.temperature,
+    topP: AGENT_MODEL_DEFAULTS.topP,
+    maxOutputTokens: AGENT_MODEL_DEFAULTS.maxOutputTokens,
+  }))
   const activeTabIndex = AGENT_EDITOR_TABS.findIndex((tab) => tab === activeTab)
   const activeTabIndexRef = useRef(activeTabIndex)
   const tabsNavRef = useRef<HTMLDivElement | null>(null)
@@ -270,15 +298,54 @@ export function AgentsSectionContent({
     }
   }, [plugin])
 
-  const selectedModelLabel = useMemo(() => {
-    if (!draftAgent?.modelId) {
-      return settings.chatModelId
-    }
-    const model = settings.chatModels.find(
-      (item) => item.id === draftAgent.modelId,
+  const agentModelOptionGroups = useMemo(() => {
+    const providerOrder = settings.providers.map((provider) => provider.id)
+    const providerIdsInModels = Array.from(
+      new Set(settings.chatModels.map((model) => model.providerId)),
     )
-    return model?.name || draftAgent.modelId
-  }, [draftAgent?.modelId, settings.chatModelId, settings.chatModels])
+    const orderedProviderIds = [
+      ...providerOrder.filter((id) => providerIdsInModels.includes(id)),
+      ...providerIdsInModels.filter((id) => !providerOrder.includes(id)),
+    ]
+
+    return orderedProviderIds
+      .map((providerId) => {
+        const models = settings.chatModels.filter(
+          (model) => model.providerId === providerId,
+        )
+        if (models.length === 0) {
+          return null
+        }
+        return {
+          label: providerId,
+          options: models.map((model) => ({
+            value: model.id,
+            label: model.name?.trim()
+              ? model.name.trim()
+              : model.model || model.id,
+          })),
+        }
+      })
+      .filter(
+        (
+          group,
+        ): group is {
+          label: string
+          options: { value: string; label: string }[]
+        } => group !== null,
+      )
+  }, [settings.chatModels, settings.providers])
+
+  useEffect(() => {
+    if (!draftAgent) {
+      return
+    }
+    setModelParamCache((prev) => ({
+      temperature: draftAgent.temperature ?? prev.temperature,
+      topP: draftAgent.topP ?? prev.topP,
+      maxOutputTokens: draftAgent.maxOutputTokens ?? prev.maxOutputTokens,
+    }))
+  }, [draftAgent])
 
   useEffect(() => {
     if (!initialAssistantId || draftAgent) {
@@ -509,6 +576,60 @@ export function AgentsSectionContent({
       skillRows.filter((skill) => skill.enabled && skill.loadMode === 'lazy'),
     [skillRows],
   )
+
+  const resetModelParams = () => {
+    if (!draftAgent) {
+      return
+    }
+    setModelParamCache({
+      temperature: AGENT_MODEL_DEFAULTS.temperature,
+      topP: AGENT_MODEL_DEFAULTS.topP,
+      maxOutputTokens: AGENT_MODEL_DEFAULTS.maxOutputTokens,
+    })
+    setDraftAgent({
+      ...draftAgent,
+      temperature: AGENT_MODEL_DEFAULTS.temperature,
+      topP: AGENT_MODEL_DEFAULTS.topP,
+      maxOutputTokens: AGENT_MODEL_DEFAULTS.maxOutputTokens,
+    })
+  }
+
+  const setTemperatureEnabled = (enabled: boolean) => {
+    if (!draftAgent) {
+      return
+    }
+    const current = draftAgent.temperature ?? modelParamCache.temperature
+    setModelParamCache((prev) => ({ ...prev, temperature: current }))
+    setDraftAgent({
+      ...draftAgent,
+      temperature: enabled ? current : undefined,
+    })
+  }
+
+  const setTopPEnabled = (enabled: boolean) => {
+    if (!draftAgent) {
+      return
+    }
+    const current = draftAgent.topP ?? modelParamCache.topP
+    setModelParamCache((prev) => ({ ...prev, topP: current }))
+    setDraftAgent({
+      ...draftAgent,
+      topP: enabled ? current : undefined,
+    })
+  }
+
+  const setMaxOutputTokensEnabled = (enabled: boolean) => {
+    if (!draftAgent) {
+      return
+    }
+    const current =
+      draftAgent.maxOutputTokens ?? modelParamCache.maxOutputTokens
+    setModelParamCache((prev) => ({ ...prev, maxOutputTokens: current }))
+    setDraftAgent({
+      ...draftAgent,
+      maxOutputTokens: enabled ? current : undefined,
+    })
+  }
 
   return (
     <div
@@ -875,89 +996,286 @@ export function AgentsSectionContent({
 
           {activeTab === 'model' && (
             <div className="smtcmp-agent-editor-body">
-              <ObsidianSetting
-                name={t('settings.agent.editorModel', 'Model')}
-                desc={t(
-                  'settings.agent.editorModelCurrent',
-                  'Current: {model}',
-                ).replace('{model}', selectedModelLabel)}
-              >
-                <select
-                  value={draftAgent.modelId || settings.chatModelId}
-                  onChange={(event) =>
-                    setDraftAgent({
-                      ...draftAgent,
-                      modelId: event.target.value,
-                    })
-                  }
-                >
-                  {settings.chatModels.map((model) => (
-                    <option key={model.id} value={model.id}>
-                      {model.name}
-                    </option>
-                  ))}
-                </select>
-              </ObsidianSetting>
-              <ObsidianSetting
-                name={t('settings.agent.editorTemperature', 'Temperature')}
-                desc={t('settings.agent.editorTemperatureDesc', '0.0 - 2.0')}
-              >
-                <ObsidianTextInput
-                  value={String(draftAgent.temperature ?? 0.7)}
-                  onChange={(value) => {
-                    const next = Number(value)
-                    if (!Number.isFinite(next)) {
-                      return
+              <div className="smtcmp-agent-model-setting-row">
+                <div className="smtcmp-agent-model-setting-info">
+                  <div className="smtcmp-agent-model-setting-title">
+                    {t('settings.agent.editorModel', 'Model')}
+                  </div>
+                  <div className="smtcmp-agent-model-setting-desc">
+                    {t(
+                      'settings.agent.editorModelDesc',
+                      'Select the model used by this agent',
+                    )}
+                  </div>
+                </div>
+                <div className="smtcmp-agent-model-select-wrap">
+                  <SimpleSelect
+                    value={draftAgent.modelId || settings.chatModelId}
+                    groupedOptions={agentModelOptionGroups}
+                    align="end"
+                    side="bottom"
+                    sideOffset={6}
+                    placeholder={t('common.select', 'Select')}
+                    contentClassName="smtcmp-agent-model-select-content"
+                    onChange={(value: string) =>
+                      setDraftAgent({
+                        ...draftAgent,
+                        modelId: value,
+                      })
                     }
-                    setDraftAgent({
-                      ...draftAgent,
-                      temperature: Math.min(2, Math.max(0, next)),
-                    })
-                  }}
-                />
-              </ObsidianSetting>
-              <ObsidianSetting
-                name={t('settings.agent.editorTopP', 'Top P')}
-                desc={t('settings.agent.editorTopPDesc', '0.0 - 1.0')}
-              >
-                <ObsidianTextInput
-                  value={String(draftAgent.topP ?? 0.9)}
-                  onChange={(value) => {
-                    const next = Number(value)
-                    if (!Number.isFinite(next)) {
-                      return
-                    }
-                    setDraftAgent({
-                      ...draftAgent,
-                      topP: Math.min(1, Math.max(0, next)),
-                    })
-                  }}
-                />
-              </ObsidianSetting>
-              <ObsidianSetting
-                name={t(
-                  'settings.agent.editorMaxOutputTokens',
-                  'Max output tokens',
-                )}
-                desc={t(
-                  'settings.agent.editorMaxOutputTokensDesc',
-                  'Maximum generated tokens',
-                )}
-              >
-                <ObsidianTextInput
-                  value={String(draftAgent.maxOutputTokens ?? 4096)}
-                  onChange={(value) => {
-                    const next = Number(value)
-                    if (!Number.isFinite(next)) {
-                      return
-                    }
-                    setDraftAgent({
-                      ...draftAgent,
-                      maxOutputTokens: Math.max(1, Math.floor(next)),
-                    })
-                  }}
-                />
-              </ObsidianSetting>
+                  />
+                </div>
+              </div>
+
+              <div className="smtcmp-agent-tools-panel smtcmp-agent-model-panel">
+                <div className="smtcmp-agent-tools-panel-head smtcmp-agent-model-panel-head">
+                  <div className="smtcmp-agent-tools-panel-title">
+                    {t(
+                      'settings.agent.editorModelSampling',
+                      'Sampling parameters',
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    className="smtcmp-agent-model-reset"
+                    onClick={resetModelParams}
+                  >
+                    {t(
+                      'settings.agent.editorModelResetDefaults',
+                      'Restore defaults',
+                    )}
+                  </button>
+                </div>
+
+                <div className="smtcmp-agent-model-controls">
+                  <div
+                    className={`smtcmp-agent-model-control${
+                      draftAgent.temperature === undefined ? ' is-disabled' : ''
+                    }`}
+                  >
+                    <div className="smtcmp-agent-model-control-top">
+                      <div className="smtcmp-agent-model-control-meta">
+                        <div className="smtcmp-agent-model-control-label">
+                          {t('settings.agent.editorTemperature', 'Temperature')}
+                        </div>
+                      </div>
+                      <div className="smtcmp-agent-model-control-actions">
+                        <ObsidianToggle
+                          value={draftAgent.temperature !== undefined}
+                          onChange={setTemperatureEnabled}
+                        />
+                      </div>
+                    </div>
+                    {draftAgent.temperature !== undefined && (
+                      <div className="smtcmp-agent-model-control-adjust">
+                        <input
+                          type="range"
+                          min={0}
+                          max={2}
+                          step={0.01}
+                          value={
+                            draftAgent.temperature ??
+                            modelParamCache.temperature
+                          }
+                          onChange={(event) => {
+                            const next = Number(event.currentTarget.value)
+                            if (!Number.isFinite(next)) {
+                              return
+                            }
+                            const clamped = clampTemperature(next)
+                            setModelParamCache((prev) => ({
+                              ...prev,
+                              temperature: clamped,
+                            }))
+                            setDraftAgent({
+                              ...draftAgent,
+                              temperature: clamped,
+                            })
+                          }}
+                        />
+                        <input
+                          type="number"
+                          className="smtcmp-agent-model-number"
+                          min={0}
+                          max={2}
+                          step={0.1}
+                          value={
+                            draftAgent.temperature ??
+                            modelParamCache.temperature
+                          }
+                          onChange={(event) => {
+                            const next = Number(event.currentTarget.value)
+                            if (!Number.isFinite(next)) {
+                              return
+                            }
+                            const clamped = clampTemperature(next)
+                            setModelParamCache((prev) => ({
+                              ...prev,
+                              temperature: clamped,
+                            }))
+                            setDraftAgent({
+                              ...draftAgent,
+                              temperature: clamped,
+                            })
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div
+                    className={`smtcmp-agent-model-control${
+                      draftAgent.topP === undefined ? ' is-disabled' : ''
+                    }`}
+                  >
+                    <div className="smtcmp-agent-model-control-top">
+                      <div className="smtcmp-agent-model-control-meta">
+                        <div className="smtcmp-agent-model-control-label">
+                          {t('settings.agent.editorTopP', 'Top P')}
+                        </div>
+                      </div>
+                      <div className="smtcmp-agent-model-control-actions">
+                        <ObsidianToggle
+                          value={draftAgent.topP !== undefined}
+                          onChange={setTopPEnabled}
+                        />
+                      </div>
+                    </div>
+                    {draftAgent.topP !== undefined && (
+                      <div className="smtcmp-agent-model-control-adjust">
+                        <input
+                          type="range"
+                          min={0}
+                          max={1}
+                          step={0.01}
+                          value={draftAgent.topP ?? modelParamCache.topP}
+                          onChange={(event) => {
+                            const next = Number(event.currentTarget.value)
+                            if (!Number.isFinite(next)) {
+                              return
+                            }
+                            const clamped = clampTopP(next)
+                            setModelParamCache((prev) => ({
+                              ...prev,
+                              topP: clamped,
+                            }))
+                            setDraftAgent({
+                              ...draftAgent,
+                              topP: clamped,
+                            })
+                          }}
+                        />
+                        <input
+                          type="number"
+                          className="smtcmp-agent-model-number"
+                          min={0}
+                          max={1}
+                          step={0.01}
+                          value={draftAgent.topP ?? modelParamCache.topP}
+                          onChange={(event) => {
+                            const next = Number(event.currentTarget.value)
+                            if (!Number.isFinite(next)) {
+                              return
+                            }
+                            const clamped = clampTopP(next)
+                            setModelParamCache((prev) => ({
+                              ...prev,
+                              topP: clamped,
+                            }))
+                            setDraftAgent({
+                              ...draftAgent,
+                              topP: clamped,
+                            })
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div
+                    className={`smtcmp-agent-model-control${
+                      draftAgent.maxOutputTokens === undefined
+                        ? ' is-disabled'
+                        : ''
+                    }`}
+                  >
+                    <div className="smtcmp-agent-model-control-top">
+                      <div className="smtcmp-agent-model-control-meta">
+                        <div className="smtcmp-agent-model-control-label">
+                          {t(
+                            'settings.agent.editorMaxOutputTokens',
+                            'Max output tokens',
+                          )}
+                        </div>
+                      </div>
+                      <div className="smtcmp-agent-model-control-actions">
+                        <ObsidianToggle
+                          value={draftAgent.maxOutputTokens !== undefined}
+                          onChange={setMaxOutputTokensEnabled}
+                        />
+                      </div>
+                    </div>
+                    {draftAgent.maxOutputTokens !== undefined && (
+                      <div className="smtcmp-agent-model-control-adjust">
+                        <input
+                          type="range"
+                          min={256}
+                          max={32768}
+                          step={256}
+                          value={Math.min(
+                            32768,
+                            Math.max(
+                              256,
+                              draftAgent.maxOutputTokens ??
+                                modelParamCache.maxOutputTokens,
+                            ),
+                          )}
+                          onChange={(event) => {
+                            const next = Number(event.currentTarget.value)
+                            if (!Number.isFinite(next)) {
+                              return
+                            }
+                            const clamped = clampMaxOutputTokens(next)
+                            setModelParamCache((prev) => ({
+                              ...prev,
+                              maxOutputTokens: clamped,
+                            }))
+                            setDraftAgent({
+                              ...draftAgent,
+                              maxOutputTokens: clamped,
+                            })
+                          }}
+                        />
+                        <input
+                          type="number"
+                          className="smtcmp-agent-model-number"
+                          min={1}
+                          step={1}
+                          value={
+                            draftAgent.maxOutputTokens ??
+                            modelParamCache.maxOutputTokens
+                          }
+                          onChange={(event) => {
+                            const next = Number(event.currentTarget.value)
+                            if (!Number.isFinite(next)) {
+                              return
+                            }
+                            const clamped = clampMaxOutputTokens(next)
+                            setModelParamCache((prev) => ({
+                              ...prev,
+                              maxOutputTokens: clamped,
+                            }))
+                            setDraftAgent({
+                              ...draftAgent,
+                              maxOutputTokens: clamped,
+                            })
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

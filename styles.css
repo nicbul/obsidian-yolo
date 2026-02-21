@@ -3004,6 +3004,29 @@
   .smtcmp-agent-tools-panel .smtcmp-agent-tool-toggle {
     margin-top: 2px;
   }
+
+  .smtcmp-agent-model-control-top {
+    grid-template-columns: 1fr;
+  }
+
+  .smtcmp-agent-model-number {
+    width: 100%;
+    text-align: left;
+  }
+
+  .smtcmp-agent-model-control-adjust {
+    grid-template-columns: 1fr;
+  }
+
+  .smtcmp-agent-model-setting-row {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .smtcmp-agent-model-select-wrap {
+    width: 100%;
+    min-width: 0;
+  }
 }
 
 .smtcmp-agent-chip {
@@ -3018,6 +3041,155 @@
 .smtcmp-agent-chip--status {
   color: var(--text-success);
   border-color: color-mix(in srgb, var(--text-success) 30%, transparent);
+}
+
+.smtcmp-agent-model-setting-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--size-4-2);
+  padding-bottom: var(--size-4-2);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.smtcmp-agent-model-setting-info {
+  min-width: 0;
+}
+
+.smtcmp-agent-model-setting-title {
+  color: var(--text-normal);
+  font-size: var(--font-ui-medium);
+  font-weight: var(--font-medium);
+  line-height: var(--line-height-tight);
+}
+
+.smtcmp-agent-model-setting-desc {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  line-height: var(--line-height-normal);
+}
+
+.smtcmp-agent-model-select-wrap {
+  width: min(520px, 100%);
+  min-width: 280px;
+}
+
+.smtcmp-agent-model-select-wrap > .smtcmp-simple-select__trigger {
+  width: 100%;
+}
+
+.smtcmp-agent-model-select-content {
+  max-height: min(360px, calc(100vh - 180px));
+}
+
+.smtcmp-agent-model-select-content .smtcmp-simple-select__list {
+  max-height: min(340px, calc(100vh - 200px));
+  overflow-y: auto;
+  padding-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.smtcmp-agent-model-panel {
+  gap: var(--size-4-2);
+}
+
+.smtcmp-agent-model-panel-head {
+  align-items: center;
+}
+
+.smtcmp-agent-model-reset {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-s);
+  background: var(--background-primary);
+  color: var(--text-muted);
+  padding: 4px 10px;
+  font-size: var(--font-ui-smaller);
+  cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    color 140ms ease,
+    background-color 140ms ease;
+}
+
+.smtcmp-agent-model-reset:hover,
+.smtcmp-agent-model-reset:focus-visible {
+  color: var(--text-normal);
+  border-color: color-mix(in srgb, var(--interactive-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--interactive-accent) 9%, transparent);
+}
+
+.smtcmp-agent-model-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-4-2);
+}
+
+.smtcmp-agent-model-control {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: var(--radius-m);
+  background: var(--background-primary);
+  padding: var(--size-4-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--size-2-2);
+}
+
+.smtcmp-agent-model-control.is-disabled {
+  opacity: 0.72;
+}
+
+.smtcmp-agent-model-control-top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: var(--size-4-2);
+}
+
+.smtcmp-agent-model-control-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+
+.smtcmp-agent-model-control-adjust {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--size-4-2);
+}
+
+.smtcmp-agent-model-control-meta {
+  min-width: 0;
+}
+
+.smtcmp-agent-model-control-label {
+  color: var(--text-normal);
+  font-size: var(--font-ui-small);
+  font-weight: var(--font-medium);
+}
+
+.smtcmp-agent-model-control-desc {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: var(--font-ui-smaller);
+}
+
+.smtcmp-agent-model-number {
+  width: 108px;
+  min-height: 30px;
+  text-align: right;
+}
+
+.smtcmp-agent-model-control input[type='range'] {
+  width: 100%;
+  margin: 0;
+}
+
+.smtcmp-agent-model-control input[type='range']:disabled,
+.smtcmp-agent-model-number:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .smtcmp-builtin-tools-table-header,
