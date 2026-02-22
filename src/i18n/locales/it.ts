@@ -1,4 +1,4 @@
-import { TranslationKeys } from '../types'
+import type { TranslationKeys } from '../types'
 
 export const it: TranslationKeys = {
   commands: {
@@ -974,9 +974,9 @@ export const it: TranslationKeys = {
     editNoFile: 'Apri prima un file',
     editNoChanges: 'Nessuna modifica valida restituita dal modello',
     editPartialSuccess:
-      'Applicate ${appliedCount} di ${blocks.length} modifiche. Controlla la console per i dettagli.',
+      'Applicate {appliedCount} di {totalEdits} modifiche. Controlla la console per i dettagli.',
     editApplied:
-      'Applicate con successo ${appliedCount} modifica/modifiche a ${activeFile.name}',
+      'Applicate con successo {appliedCount} modifica/modifiche a {fileName}',
   },
 
   chatMode: {

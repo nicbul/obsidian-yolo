@@ -1,8 +1,9 @@
-import { App, TFile, TFolder, htmlToMarkdown, requestUrl } from 'obsidian'
+import type { App, TFile, TFolder } from 'obsidian'
+import { htmlToMarkdown, requestUrl } from 'obsidian'
 
 import { editorStateToPlainText } from '../../components/chat-view/chat-input/utils/editor-state-to-plain-text'
-import { QueryProgressState } from '../../components/chat-view/QueryProgress'
-import { RAGEngine } from '../../core/rag/ragEngine'
+import type { QueryProgressState } from '../../components/chat-view/QueryProgress'
+import type { RAGEngine } from '../../core/rag/ragEngine'
 import {
   getLiteSkillDocument,
   listLiteSkillEntries,
@@ -11,17 +12,17 @@ import {
   isSkillEnabledForAssistant,
   resolveAssistantSkillPolicy,
 } from '../../core/skills/skillPolicy'
-import { SelectEmbedding } from '../../database/schema'
-import { SmartComposerSettings } from '../../settings/schema/setting.types'
-import {
+import type { SelectEmbedding } from '../../database/schema'
+import type { SmartComposerSettings } from '../../settings/schema/setting.types'
+import type {
   ChatAssistantMessage,
   ChatMessage,
   ChatToolMessage,
   ChatUserMessage,
 } from '../../types/chat'
-import { ChatModel } from '../../types/chat-model.types'
-import { ContentPart, RequestMessage } from '../../types/llm/request'
-import {
+import type { ChatModel } from '../../types/chat-model.types'
+import type { ContentPart, RequestMessage } from '../../types/llm/request'
+import type {
   MentionableBlock,
   MentionableFile,
   MentionableFolder,
@@ -33,7 +34,7 @@ import { ToolCallResponseStatus } from '../../types/tool-call.types'
 import { tokenCount } from '../llm/token'
 import { getNestedFiles, readTFileContent } from '../obsidian'
 
-import { YoutubeTranscript, isYoutubeUrl } from './youtube-transcript'
+import { isYoutubeUrl, YoutubeTranscript } from './youtube-transcript'
 
 export type CurrentFileContextMode = 'full' | 'summary'
 
@@ -92,7 +93,7 @@ export class PromptGenerator {
     )
 
     // find last user message
-    let lastUserMessage: ChatUserMessage | undefined = undefined
+    let lastUserMessage: ChatUserMessage | null = null
     for (let i = compiledMessages.length - 1; i >= 0; --i) {
       if (compiledMessages[i].role === 'user') {
         lastUserMessage = compiledMessages[i] as ChatUserMessage
@@ -315,7 +316,11 @@ ${message.annotations
         }
       }
       const query = editorStateToPlainText(message.content)
-      let similaritySearchResults = undefined
+      let similaritySearchResults:
+        | (Omit<SelectEmbedding, 'embedding'> & {
+            similarity: number
+          })[]
+        | undefined
 
       const mentionablesRequireVaultSearch = message.mentionables.some(
         (m): m is MentionableVault => m.type === 'vault',

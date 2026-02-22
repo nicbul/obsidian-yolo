@@ -1,4 +1,4 @@
-import { TranslationKeys } from '../types'
+import type { TranslationKeys } from '../types'
 
 export const zh: TranslationKeys = {
   commands: {
@@ -914,8 +914,8 @@ export const zh: TranslationKeys = {
     editNoFile: '请先打开一个文件',
     editNoChanges: '模型未返回有效的编辑内容',
     editPartialSuccess:
-      '已应用 ${appliedCount}/${blocks.length} 个编辑，详情请查看控制台',
-    editApplied: '成功应用了 ${appliedCount} 个编辑到 ${activeFile.name}',
+      '已应用 {appliedCount}/{totalEdits} 个编辑，详情请查看控制台',
+    editApplied: '成功应用了 {appliedCount} 个编辑到 {fileName}',
   },
 
   chatMode: {
