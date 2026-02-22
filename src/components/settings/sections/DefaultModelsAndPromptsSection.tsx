@@ -3,7 +3,6 @@ import { useCallback, useMemo } from 'react'
 import {
   DEFAULT_CHAT_TITLE_PROMPT,
   RECOMMENDED_MODELS_FOR_APPLY,
-  RECOMMENDED_MODELS_FOR_CHAT,
 } from '../../../constants'
 import { useLanguage } from '../../../contexts/language-context'
 import { useSettings } from '../../../contexts/settings-context'
@@ -83,11 +82,6 @@ export function DefaultModelsAndPromptsSection() {
     [enabledChatModels, orderedProviderIds, t],
   )
 
-  const chatModelGroupedOptions = useMemo(
-    () => buildGroupedChatOptions(RECOMMENDED_MODELS_FOR_CHAT),
-    [buildGroupedChatOptions],
-  )
-
   const applyModelGroupedOptions = useMemo(
     () => buildGroupedChatOptions(RECOMMENDED_MODELS_FOR_APPLY),
     [buildGroupedChatOptions],
@@ -109,19 +103,6 @@ export function DefaultModelsAndPromptsSection() {
       <div className="smtcmp-settings-header">
         {t('settings.defaults.title')}
       </div>
-
-      <ObsidianSetting
-        name={t('settings.defaults.defaultChatModel')}
-        desc={t('settings.defaults.defaultChatModelDesc')}
-      >
-        <ObsidianDropdown
-          value={settings.chatModelId}
-          groupedOptions={chatModelGroupedOptions}
-          onChange={(value) => {
-            commitSettingsUpdate({ chatModelId: value }, 'chatModelId')
-          }}
-        />
-      </ObsidianSetting>
 
       <ObsidianSetting
         name={t('settings.defaults.toolModel')}

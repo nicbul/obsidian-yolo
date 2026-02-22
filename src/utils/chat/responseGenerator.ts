@@ -62,6 +62,15 @@ export type ResponseGeneratorParams = {
 }
 
 export class ResponseGenerator {
+  private static readonly LOCAL_TOOL_NAMES = new Set([
+    'fs_list',
+    'fs_search',
+    'fs_read',
+    'fs_edit',
+    'fs_write',
+    'open_skill',
+  ])
+
   private readonly providerClient: BaseLLMProvider<LLMProvider>
   private readonly model: ChatModel
   private readonly conversationId: string
@@ -278,6 +287,18 @@ export class ResponseGenerator {
     )
     const hasTools = filteredTools.length > 0
 
+    if (this.enableTools && !hasTools) {
+      console.warn(
+        '[Smart Composer] Agent tools enabled but request has no available tools.',
+        {
+          conversationId: this.conversationId,
+          includeBuiltinTools: this.includeBuiltinTools,
+          availableToolsCount: availableTools.length,
+          allowedToolNamesCount: this.allowedToolNames?.size ?? 0,
+        },
+      )
+    }
+
     const requestMessages = await this.promptGenerator.generateRequestMessages({
       messages: [...this.receivedMessages, ...this.responseMessages],
       hasTools,
@@ -325,6 +346,7 @@ export class ResponseGenerator {
           model: effectiveModel.model,
           messages: requestMessages,
           tools,
+          tool_choice: tools ? 'auto' : undefined,
           stream: false,
           temperature: this.requestParams?.temperature,
           top_p: this.requestParams?.top_p,
@@ -371,13 +393,24 @@ export class ResponseGenerator {
           if (!toolCall.function?.name) return null
           const base: ToolCallRequest = {
             id: toolCall.id ?? uuidv4(),
-            name: toolCall.function.name,
+            name: this.normalizeToolCallName(toolCall.function.name),
           }
           return toolCall.function.arguments
             ? { ...base, arguments: toolCall.function.arguments }
             : base
         })
         .filter((t): t is ToolCallRequest => t !== null)
+
+      if (tools && toolCallRequests.length === 0) {
+        console.warn(
+          '[Smart Composer] Model returned no tool calls in non-stream mode.',
+          {
+            conversationId: this.conversationId,
+            model: effectiveModel.model,
+            providerType: this.model.providerType,
+          },
+        )
+      }
 
       // Update assistant message with toolCallRequests
       this.updateResponseMessages((messages) =>
@@ -441,6 +474,7 @@ export class ResponseGenerator {
           model: effectiveModel.model,
           messages: requestMessages,
           tools,
+          tool_choice: tools ? 'auto' : undefined,
           stream: true,
           temperature: this.requestParams?.temperature,
           top_p: this.requestParams?.top_p,
@@ -593,11 +627,22 @@ export class ResponseGenerator {
         }
         return {
           id: toolCall.id ?? uuidv4(),
-          name: toolCall.function.name,
+          name: this.normalizeToolCallName(toolCall.function.name),
           arguments: toolCall.function.arguments,
         }
       })
       .filter((toolCall) => toolCall !== null)
+
+    if (tools && toolCallRequests.length === 0) {
+      console.warn(
+        '[Smart Composer] Model returned no tool calls in stream mode.',
+        {
+          conversationId: this.conversationId,
+          model: effectiveModel.model,
+          providerType: this.model.providerType,
+        },
+      )
+    }
 
     this.updateResponseMessages((messages) =>
       messages.map((message) =>
@@ -780,6 +825,16 @@ export class ResponseGenerator {
       typeof reasoning === 'string' && reasoning.trim().length > 0
     const hasAnnotations = Boolean(annotations && annotations.length > 0)
     return hasContent || hasReasoning || hasAnnotations
+  }
+
+  private normalizeToolCallName(toolName: string): string {
+    if (toolName.includes(McpManager.TOOL_NAME_DELIMITER)) {
+      return toolName
+    }
+    if (!ResponseGenerator.LOCAL_TOOL_NAMES.has(toolName)) {
+      return toolName
+    }
+    return `${getLocalFileToolServerName()}${McpManager.TOOL_NAME_DELIMITER}${toolName}`
   }
 
   private isToolAllowed(toolName: string): boolean {

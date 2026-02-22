@@ -102,9 +102,7 @@ export function useChatStreamManager({
           : null
 
         const requestedModelId =
-          chatMode === 'agent' && selectedAssistant?.modelId
-            ? selectedAssistant.modelId
-            : modelId
+          modelId || selectedAssistant?.modelId || settings.chatModelId
 
         let resolvedClient: ReturnType<typeof getChatModelClient>
         try {

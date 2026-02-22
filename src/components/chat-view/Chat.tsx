@@ -216,10 +216,41 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
     return defaultMode
   })
 
+  const selectedAssistant = useMemo(() => {
+    if (!settings.currentAssistantId) {
+      return null
+    }
+    return (
+      settings.assistants.find(
+        (assistant) => assistant.id === settings.currentAssistantId,
+      ) ?? null
+    )
+  }, [settings.assistants, settings.currentAssistantId])
+
   // Per-conversation model id (do NOT write back to global settings)
   const conversationModelIdRef = useRef<Map<string, string>>(new Map())
   const [conversationModelId, setConversationModelId] = useState<string>(
     settings.chatModelId,
+  )
+
+  const applyAssistantDefaultModel = useCallback(
+    (assistantModelId?: string | null) => {
+      if (!assistantModelId) {
+        return
+      }
+      const matchedModel = settings.chatModels.find(
+        (model) => model.id === assistantModelId,
+      )
+      if (!matchedModel) {
+        return
+      }
+      setConversationModelId(assistantModelId)
+      conversationModelIdRef.current.set(
+        currentConversationId,
+        assistantModelId,
+      )
+    },
+    [currentConversationId, settings.chatModels],
   )
 
   // Per-message model mapping for historical user messages
@@ -369,6 +400,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
         }
         const modelFromRef =
           conversationModelIdRef.current.get(conversationId) ??
+          selectedAssistant?.modelId ??
           settings.chatModelId
         const modelForConversation =
           settings.chatModels.find((m) => m.id === modelFromRef) ?? null
@@ -412,6 +444,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
       settings.chatModelId,
       settings.chatModels,
       settings.chatOptions.chatMode,
+      selectedAssistant?.modelId,
       normalizeReasoningLevel,
     ],
   )
@@ -434,10 +467,13 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
         ? 'chat'
         : defaultChatMode,
     )
-    conversationModelIdRef.current.set(newId, settings.chatModelId)
-    setConversationModelId(settings.chatModelId)
+    const defaultConversationModelId =
+      selectedAssistant?.modelId ?? settings.chatModelId
+    conversationModelIdRef.current.set(newId, defaultConversationModelId)
+    setConversationModelId(defaultConversationModelId)
     const defaultReasoningLevel = getDefaultReasoningLevel(
-      settings.chatModels.find((m) => m.id === settings.chatModelId) ?? null,
+      settings.chatModels.find((m) => m.id === defaultConversationModelId) ??
+        null,
     )
     setReasoningLevel(defaultReasoningLevel)
     conversationReasoningLevelRef.current.set(newId, defaultReasoningLevel)
@@ -1299,8 +1335,25 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
       }
 
       applyChatModeChange(resolvedMode)
+
+      if (
+        resolvedMode === 'agent' &&
+        selectedAssistant?.modelId &&
+        conversationModelId === settings.chatModelId
+      ) {
+        applyAssistantDefaultModel(selectedAssistant.modelId)
+      }
     },
-    [app, applyChatModeChange, setSettings, settings, t],
+    [
+      app,
+      applyAssistantDefaultModel,
+      applyChatModeChange,
+      conversationModelId,
+      selectedAssistant?.modelId,
+      setSettings,
+      settings,
+      t,
+    ],
   )
 
   const header = (
@@ -1318,7 +1371,11 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
       )}
       {activeView === 'chat' && (
         <div className="smtcmp-chat-header-right">
-          <AssistantSelector />
+          <AssistantSelector
+            onAssistantChange={(assistant) => {
+              applyAssistantDefaultModel(assistant.modelId)
+            }}
+          />
           <div className="smtcmp-chat-header-buttons">
             <button
               type="button"
