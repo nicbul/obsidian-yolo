@@ -99,6 +99,28 @@ export function EtcSection({ app }: EtcSectionProps) {
     }).open()
   }
 
+  const handleResetAgents = () => {
+    new ConfirmModal(app, {
+      title: t('settings.etc.resetAgents'),
+      message: t('settings.etc.resetAgentsConfirm'),
+      ctaText: t('settings.etc.reset'),
+      onConfirm: () => {
+        void (async () => {
+          await setSettings({
+            ...settings,
+            assistants: [],
+            currentAssistantId: undefined,
+            quickAskAssistantId: undefined,
+          })
+          new Notice(t('settings.etc.resetAgentsSuccess'))
+        })().catch((error: unknown) => {
+          console.error('Failed to reset agents', error)
+          new Notice(t('common.error'))
+        })
+      },
+    }).open()
+  }
+
   return (
     <div className="smtcmp-settings-section">
       <div className="smtcmp-settings-header">{t('settings.etc.title')}</div>
@@ -122,6 +144,17 @@ export function EtcSection({ app }: EtcSectionProps) {
           text={t('settings.etc.reset')}
           warning
           onClick={handleResetProviders}
+        />
+      </ObsidianSetting>
+
+      <ObsidianSetting
+        name={t('settings.etc.resetAgents')}
+        desc={t('settings.etc.resetAgentsDesc')}
+      >
+        <ObsidianButton
+          text={t('settings.etc.reset')}
+          warning
+          onClick={handleResetAgents}
         />
       </ObsidianSetting>
 

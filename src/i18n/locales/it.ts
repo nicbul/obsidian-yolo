@@ -720,6 +720,13 @@ export const it: TranslationKeys = {
       resetProvidersConfirm:
         'Sei sicuro di voler ripristinare tutti i provider? Questa azione non può essere annullata.',
       resetProvidersSuccess: 'Provider ripristinati con successo.',
+      resetAgents: 'Ripristina agent',
+      resetAgentsDesc:
+        'Ripristina la configurazione predefinita degli agent e rimuove gli agent personalizzati.',
+      resetAgentsConfirm:
+        'Sei sicuro di voler ripristinare la configurazione degli agent? Questa azione rimuoverà gli agent personalizzati e reimposterà la selezione corrente.',
+      resetAgentsSuccess:
+        'La configurazione degli agent è stata ripristinata ai valori predefiniti.',
     },
   },
 

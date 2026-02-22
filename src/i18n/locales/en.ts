@@ -729,6 +729,12 @@ export const en: TranslationKeys = {
       resetProvidersConfirm:
         'Are you sure you want to reset providers and models to defaults and overwrite the existing configuration?',
       resetProvidersSuccess: 'Providers and models have been reset to defaults',
+      resetAgents: 'Reset agents',
+      resetAgentsDesc:
+        'Restore default agent configuration and remove custom agents',
+      resetAgentsConfirm:
+        'Are you sure you want to reset agent configuration? This will remove custom agents and reset the current selection.',
+      resetAgentsSuccess: 'Agent configuration has been reset to defaults',
     },
   },
 

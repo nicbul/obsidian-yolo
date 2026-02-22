@@ -5,8 +5,7 @@ export const DEFAULT_ASSISTANT_ID = '__default_agent__'
 
 const DEFAULT_ASSISTANT_NAME = 'Default'
 const DEFAULT_ASSISTANT_DESCRIPTION = 'Default editing agent for sidebar chat.'
-const DEFAULT_ASSISTANT_SYSTEM_PROMPT =
-  'You are the default editing assistant. Keep answers clear, practical, and aligned with the user intent.'
+const DEFAULT_ASSISTANT_SYSTEM_PROMPT = ''
 
 export const isDefaultAssistantId = (assistantId?: string | null): boolean =>
   assistantId === DEFAULT_ASSISTANT_ID
@@ -37,7 +36,9 @@ const normalizeDefaultAssistant = (
   name: assistant.name?.trim() || DEFAULT_ASSISTANT_NAME,
   description: assistant.description?.trim() || DEFAULT_ASSISTANT_DESCRIPTION,
   systemPrompt:
-    assistant.systemPrompt?.trim() || DEFAULT_ASSISTANT_SYSTEM_PROMPT,
+    typeof assistant.systemPrompt === 'string'
+      ? assistant.systemPrompt
+      : DEFAULT_ASSISTANT_SYSTEM_PROMPT,
   modelId: assistant.modelId || fallbackModelId,
   enableTools: assistant.enableTools ?? true,
   includeBuiltinTools: assistant.includeBuiltinTools ?? true,

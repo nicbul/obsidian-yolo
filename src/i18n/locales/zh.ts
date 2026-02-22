@@ -670,6 +670,11 @@ export const zh: TranslationKeys = {
       resetProvidersConfirm:
         '确定要重置供应商与模型配置为默认吗？此操作将覆盖现有配置。',
       resetProvidersSuccess: '供应商与模型配置已重置为默认',
+      resetAgents: '重置 Agent',
+      resetAgentsDesc: '恢复默认 Agent 配置并移除自定义 Agent',
+      resetAgentsConfirm:
+        '确定要重置 Agent 配置吗？此操作将删除自定义 Agent 并重置当前选择。',
+      resetAgentsSuccess: 'Agent 配置已重置为默认',
     },
   },
 

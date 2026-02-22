@@ -561,6 +561,10 @@ export type TranslationKeys = {
       resetProvidersDesc?: string
       resetProvidersConfirm?: string
       resetProvidersSuccess?: string
+      resetAgents?: string
+      resetAgentsDesc?: string
+      resetAgentsConfirm?: string
+      resetAgentsSuccess?: string
     }
     smartSpace?: {
       quickActionsTitle: string
