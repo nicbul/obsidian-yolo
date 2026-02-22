@@ -48,6 +48,7 @@ import {
 import { groupAssistantAndToolMessages } from '../../utils/chat/message-groups'
 import { PromptGenerator } from '../../utils/chat/promptGenerator'
 import { readTFileContent } from '../../utils/obsidian'
+import { AgentModeWarningModal } from '../modals/AgentModeWarningModal'
 import { ErrorModal } from '../modals/ErrorModal'
 
 // removed Prompt Templates feature
@@ -108,7 +109,7 @@ export type ChatProps = {
 const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
   const app = useApp()
   const plugin = usePlugin()
-  const { settings } = useSettings()
+  const { settings, setSettings } = useSettings()
   const { t } = useLanguage()
   const { getRAGEngine } = useRAG()
   const { getMcpManager } = useMcp()
@@ -1218,21 +1219,88 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
     },
   }))
 
+  const applyChatModeChange = useCallback(
+    (nextMode: ChatMode) => {
+      setChatMode(nextMode)
+      setConversationOverrides((prev) => ({
+        ...(prev ?? {}),
+        chatMode: nextMode,
+      }))
+      conversationOverridesRef.current.set(currentConversationId, {
+        ...(conversationOverridesRef.current.get(currentConversationId) ?? {}),
+        chatMode: nextMode,
+      })
+    },
+    [currentConversationId],
+  )
+
   const handleChatModeChange = useCallback(
     (nextMode: ChatMode) => {
       const resolvedMode =
         !Platform.isDesktop && nextMode === 'agent' ? 'chat' : nextMode
-      setChatMode(resolvedMode)
-      setConversationOverrides((prev) => ({
-        ...(prev ?? {}),
-        chatMode: resolvedMode,
-      }))
-      conversationOverridesRef.current.set(currentConversationId, {
-        ...(conversationOverridesRef.current.get(currentConversationId) ?? {}),
-        chatMode: resolvedMode,
-      })
+
+      if (
+        resolvedMode === 'agent' &&
+        !settings.chatOptions.agentModeWarningConfirmed
+      ) {
+        new AgentModeWarningModal(app, {
+          title: t(
+            'chatMode.warning.title',
+            'Please confirm before enabling Agent mode',
+          ),
+          description: t(
+            'chatMode.warning.description',
+            'Agent can automatically invoke tools. Please review the following risks before continuing:',
+          ),
+          risks: [
+            t(
+              'chatMode.warning.permission',
+              'Strictly control tool-call permissions and grant only what is necessary.',
+            ),
+            t(
+              'chatMode.warning.cost',
+              'Agent tasks may consume significant model resources and incur higher costs.',
+            ),
+            t(
+              'chatMode.warning.backup',
+              'Back up important content in advance to avoid unintended changes.',
+            ),
+          ],
+          checkboxLabel: t(
+            'chatMode.warning.checkbox',
+            'I understand the risks above and accept responsibility for proceeding',
+          ),
+          cancelText: t('chatMode.warning.cancel', 'Cancel'),
+          confirmText: t(
+            'chatMode.warning.confirm',
+            'Continue and Enable Agent',
+          ),
+          onConfirm: () => {
+            applyChatModeChange('agent')
+            void (async () => {
+              try {
+                await setSettings({
+                  ...settings,
+                  chatOptions: {
+                    ...settings.chatOptions,
+                    agentModeWarningConfirmed: true,
+                  },
+                })
+              } catch (error: unknown) {
+                console.error(
+                  'Failed to persist agent mode warning confirmation',
+                  error,
+                )
+              }
+            })()
+          },
+        }).open()
+        return
+      }
+
+      applyChatModeChange(resolvedMode)
     },
-    [currentConversationId],
+    [app, applyChatModeChange, setSettings, settings, t],
   )
 
   const header = (

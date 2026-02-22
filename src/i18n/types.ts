@@ -871,6 +871,16 @@ export type TranslationKeys = {
     chatDesc?: string
     agent?: string
     agentDesc?: string
+    warning?: {
+      title?: string
+      description?: string
+      permission?: string
+      cost?: string
+      backup?: string
+      checkbox?: string
+      cancel?: string
+      confirm?: string
+    }
   }
 
   // Reasoning Select

@@ -34,7 +34,7 @@ import { ToolCallResponseStatus } from '../../types/tool-call.types'
 import { tokenCount } from '../llm/token'
 import { getNestedFiles, readTFileContent } from '../obsidian'
 
-import { isYoutubeUrl, YoutubeTranscript } from './youtube-transcript'
+import { YoutubeTranscript, isYoutubeUrl } from './youtube-transcript'
 
 export type CurrentFileContextMode = 'full' | 'summary'
 

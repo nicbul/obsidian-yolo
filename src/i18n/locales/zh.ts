@@ -928,6 +928,18 @@ export const zh: TranslationKeys = {
     chatDesc: '适合提问、润色与改写',
     agent: 'Agent',
     agentDesc: '启用工具链，处理多步骤任务',
+    warning: {
+      title: '⚠️ Agent 模式风险提示',
+      description:
+        'Agent 具备自动调用工具、修改文件内容的能力。请在继续前了解以下风险：',
+      permission:
+        '模型可能出错：部分操作可能无法撤销，请严格控制工具调用权限，仅授予必要权限',
+      cost: '资源消耗较高：Agent 任务可能消耗较多 Token 并产生更高成本',
+      backup: '请提前备份：重要内容建议备份，以防误操作导致意外变更',
+      checkbox: '我已了解上述风险，并愿意自行承担相关后果',
+      cancel: '取消',
+      confirm: '继续并启用 Agent',
+    },
   },
 
   reasoning: {

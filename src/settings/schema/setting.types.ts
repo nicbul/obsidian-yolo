@@ -281,12 +281,15 @@ export const smartComposerSettingsSchema = z.object({
       baseModelSpecialPrompt: z.string().optional(),
       // Chat mode (chat/agent)
       chatMode: z.enum(['chat', 'agent']).optional(),
+      // Whether the user has acknowledged the first-time agent mode warning
+      agentModeWarningConfirmed: z.boolean().optional(),
     })
     .catch({
       includeCurrentFileContent: true,
       chatTitlePrompt: '',
       baseModelSpecialPrompt: '',
       chatMode: 'chat',
+      agentModeWarningConfirmed: false,
     }),
 
   // Continuation (续写) options

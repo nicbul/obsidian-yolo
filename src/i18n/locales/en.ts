@@ -982,6 +982,20 @@ export const en: TranslationKeys = {
     chatDesc: 'Best for asking, polishing, and rewriting',
     agent: 'Agent',
     agentDesc: 'Enable tools for multi-step execution',
+    warning: {
+      title: 'Please confirm before enabling Agent mode',
+      description:
+        'Agent can automatically invoke tools. Please review the following risks before continuing:',
+      permission:
+        'Strictly control tool-call permissions and grant only what is necessary.',
+      cost: 'Agent tasks may consume significant model resources and incur higher costs.',
+      backup:
+        'Back up important content in advance to avoid unintended changes.',
+      checkbox:
+        'I understand the risks above and accept responsibility for proceeding',
+      cancel: 'Cancel',
+      confirm: 'Continue and Enable Agent',
+    },
   },
 
   reasoning: {
