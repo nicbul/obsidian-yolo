@@ -6,7 +6,6 @@ import { useApp } from '../../contexts/app-context'
 import { useMcp } from '../../contexts/mcp-context'
 import { usePlugin } from '../../contexts/plugin-context'
 import { useSettings } from '../../contexts/settings-context'
-import { isDefaultAssistantId } from '../../core/agent/default-assistant'
 import {
   LLMAPIKeyInvalidException,
   LLMAPIKeyNotSetException,
@@ -161,15 +160,13 @@ export function useChatStreamManager({
         const allowedSkillIds = enabledSkillEntries.map((skill) => skill.id)
         const allowedSkillNames = enabledSkillEntries.map((skill) => skill.name)
 
-        const isDefaultAssistant = isDefaultAssistantId(selectedAssistant?.id)
         const effectiveEnableTools =
-          chatMode === 'agent' && !isDefaultAssistant
+          chatMode === 'agent'
             ? (selectedAssistant?.enableTools ?? true)
             : false
-        const effectiveIncludeBuiltinTools =
-          effectiveEnableTools && !isDefaultAssistant
-            ? (selectedAssistant?.includeBuiltinTools ?? true)
-            : false
+        const effectiveIncludeBuiltinTools = effectiveEnableTools
+          ? (selectedAssistant?.includeBuiltinTools ?? true)
+          : false
 
         const mcpManager = await getMcpManager()
         const onRunnerMessages = (responseMessages: ChatMessage[]) => {

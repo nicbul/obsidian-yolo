@@ -285,11 +285,12 @@ https://github.com/glowingjade/obsidian-smart-composer/issues/286`,
           yield parsedChunk
         }
       } else if (chunk.type === 'message_delta') {
+        // Anthropic streams `message_delta.usage.output_tokens` as the current
+        // cumulative output token count, not an incremental delta.
         usage = {
           prompt_tokens: usage.prompt_tokens,
-          completion_tokens:
-            usage.completion_tokens + chunk.usage.output_tokens,
-          total_tokens: usage.total_tokens + chunk.usage.output_tokens,
+          completion_tokens: chunk.usage.output_tokens,
+          total_tokens: usage.prompt_tokens + chunk.usage.output_tokens,
         }
       }
     }

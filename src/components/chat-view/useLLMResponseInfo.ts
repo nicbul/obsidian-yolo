@@ -18,31 +18,60 @@ type LLMResponseInfo = {
 export function useLLMResponseInfo(
   messages: AssistantToolMessageGroup,
 ): LLMResponseInfo {
-  const usage = useMemo<ResponseUsage | null>(() => {
-    return messages.reduce((acc: ResponseUsage | null, message) => {
-      if (message.role === 'assistant' && message.metadata?.usage) {
-        if (!acc) {
-          return message.metadata.usage
-        }
-        return {
-          prompt_tokens:
-            acc.prompt_tokens + message.metadata.usage.prompt_tokens,
-          completion_tokens:
-            acc.completion_tokens + message.metadata.usage.completion_tokens,
-          total_tokens: acc.total_tokens + message.metadata.usage.total_tokens,
-        }
+  const {
+    latestAssistantMessage,
+    latestAssistantWithUsage,
+    latestAssistantWithDuration,
+  } = useMemo(() => {
+    let latestAssistantMessage: ChatAssistantMessage | undefined
+    let latestAssistantWithUsage: ChatAssistantMessage | undefined
+    let latestAssistantWithDuration: ChatAssistantMessage | undefined
+
+    for (let index = messages.length - 1; index >= 0; index -= 1) {
+      const message = messages[index]
+      if (message.role !== 'assistant') {
+        continue
       }
-      return acc
-    }, null)
+
+      latestAssistantMessage = latestAssistantMessage ?? message
+
+      if (!latestAssistantWithUsage && message.metadata?.usage) {
+        latestAssistantWithUsage = message
+      }
+
+      if (
+        !latestAssistantWithDuration &&
+        typeof message.metadata?.durationMs === 'number'
+      ) {
+        latestAssistantWithDuration = message
+      }
+
+      if (
+        latestAssistantMessage &&
+        latestAssistantWithUsage &&
+        latestAssistantWithDuration
+      ) {
+        break
+      }
+    }
+
+    return {
+      latestAssistantMessage,
+      latestAssistantWithUsage,
+      latestAssistantWithDuration,
+    }
   }, [messages])
 
+  const usage = useMemo<ResponseUsage | null>(() => {
+    return latestAssistantWithUsage?.metadata?.usage ?? null
+  }, [latestAssistantWithUsage])
+
   const model = useMemo<ChatModel | undefined>(() => {
-    const assistantMessageWithModel = messages.find(
-      (message): message is ChatAssistantMessage =>
-        message.role === 'assistant' && !!message.metadata?.model,
+    return (
+      latestAssistantWithUsage?.metadata?.model ??
+      latestAssistantMessage?.metadata?.model
     )
-    return assistantMessageWithModel?.metadata?.model
-  }, [messages])
+  }, [latestAssistantMessage, latestAssistantWithUsage])
 
   const cost = useMemo<number | null>(() => {
     if (!model || !usage) {
@@ -55,19 +84,8 @@ export function useLLMResponseInfo(
   }, [model, usage])
 
   const durationMs = useMemo<number | null>(() => {
-    let totalDuration = 0
-    let hasDuration = false
-    for (const message of messages) {
-      if (message.role === 'assistant') {
-        const duration = message.metadata?.durationMs
-        if (typeof duration === 'number') {
-          hasDuration = true
-          totalDuration += duration
-        }
-      }
-    }
-    return hasDuration ? totalDuration : null
-  }, [messages])
+    return latestAssistantWithDuration?.metadata?.durationMs ?? null
+  }, [latestAssistantWithDuration])
 
   return {
     usage,

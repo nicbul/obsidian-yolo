@@ -18,8 +18,8 @@ export const createDefaultAssistant = (fallbackModelId: string): Assistant => ({
   systemPrompt: DEFAULT_ASSISTANT_SYSTEM_PROMPT,
   modelId: fallbackModelId,
   persona: 'balanced',
-  enableTools: false,
-  includeBuiltinTools: false,
+  enableTools: true,
+  includeBuiltinTools: true,
   enabledToolNames: [],
   enabledSkills: [],
   skillPreferences: {},
@@ -39,9 +39,9 @@ const normalizeDefaultAssistant = (
   systemPrompt:
     assistant.systemPrompt?.trim() || DEFAULT_ASSISTANT_SYSTEM_PROMPT,
   modelId: assistant.modelId || fallbackModelId,
-  enableTools: false,
-  includeBuiltinTools: false,
-  enabledToolNames: [],
+  enableTools: assistant.enableTools ?? true,
+  includeBuiltinTools: assistant.includeBuiltinTools ?? true,
+  enabledToolNames: assistant.enabledToolNames ?? [],
   createdAt: assistant.createdAt ?? Date.now(),
   updatedAt: Date.now(),
 })
