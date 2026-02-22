@@ -339,6 +339,9 @@ export type TranslationKeys = {
       toolTypeDesc?: string
       toolTypeNone?: string
       toolTypeGemini?: string
+      sampling?: string
+      restoreDefaults?: string
+      maxOutputTokens?: string
       customParameters?: string
       customParametersDesc?: string
       customParametersAdd?: string

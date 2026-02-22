@@ -25,6 +25,9 @@ const baseChatModelSchema = z.object({
   reasoningType: z
     .enum(['none', 'openai', 'gemini', 'anthropic', 'generic'])
     .optional(),
+  temperature: z.number().min(0).max(2).optional(),
+  topP: z.number().min(0).max(1).optional(),
+  maxOutputTokens: z.number().int().min(1).optional(),
   customParameters: z.array(customParameterSchema).optional(),
 })
 

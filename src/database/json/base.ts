@@ -5,11 +5,12 @@ export abstract class AbstractJsonRepository<T, M> {
   protected dataDir: string
   protected app: App
   private writeQueue: Promise<void> = Promise.resolve()
+  private ensureDirectoryPromise: Promise<void> | null = null
 
   constructor(app: App, dataDir: string) {
     this.app = app
     this.dataDir = normalizePath(dataDir)
-    void this.ensureDirectory().catch((error) => {
+    void this.ensureRepositoryDir().catch((error) => {
       console.error(
         `[Smart Composer] Failed to ensure data directory "${this.dataDir}":`,
         error,
@@ -17,9 +18,29 @@ export abstract class AbstractJsonRepository<T, M> {
     })
   }
 
-  private async ensureDirectory(): Promise<void> {
-    if (!(await this.app.vault.adapter.exists(this.dataDir))) {
+  private ensureRepositoryDir(): Promise<void> {
+    return this.app.vault.adapter.exists(this.dataDir).then((exists) => {
+      if (exists) {
+        return
+      }
+      if (!this.ensureDirectoryPromise) {
+        this.ensureDirectoryPromise =
+          this.ensureRepositoryDirInternal().finally(() => {
+            this.ensureDirectoryPromise = null
+          })
+      }
+      return this.ensureDirectoryPromise
+    })
+  }
+
+  private async ensureRepositoryDirInternal(): Promise<void> {
+    try {
       await this.app.vault.adapter.mkdir(this.dataDir)
+    } catch (error) {
+      if (await this.app.vault.adapter.exists(this.dataDir)) {
+        return
+      }
+      throw error
     }
   }
 
@@ -34,11 +55,17 @@ export abstract class AbstractJsonRepository<T, M> {
 
   protected writeFile(filePath: string, content: string): Promise<void> {
     return this.enqueueWrite(async () => {
+      await this.ensureRepositoryDir()
       try {
         await this.app.vault.adapter.write(filePath, content)
       } catch (error) {
         if (
           await this.handleAtomicWriteTempFileError(error, filePath, content)
+        ) {
+          return
+        }
+        if (
+          await this.handleMissingDirectoryOnWrite(error, filePath, content)
         ) {
           return
         }
@@ -49,6 +76,7 @@ export abstract class AbstractJsonRepository<T, M> {
 
   protected removeFile(filePath: string): Promise<void> {
     return this.enqueueWrite(async () => {
+      await this.ensureRepositoryDir()
       try {
         await this.app.vault.adapter.remove(filePath)
       } catch (error) {
@@ -74,6 +102,20 @@ export abstract class AbstractJsonRepository<T, M> {
       return true
     }
 
+    await this.app.vault.adapter.write(filePath, content)
+    return true
+  }
+
+  private async handleMissingDirectoryOnWrite(
+    error: unknown,
+    filePath: string,
+    content: string,
+  ): Promise<boolean> {
+    if (!this.isEnoentError(error)) {
+      return false
+    }
+
+    await this.ensureRepositoryDir()
     await this.app.vault.adapter.write(filePath, content)
     return true
   }
@@ -140,6 +182,7 @@ export abstract class AbstractJsonRepository<T, M> {
 
   // List metadata for all records by parsing file names.
   public async listMetadata(): Promise<(M & { fileName: string })[]> {
+    await this.ensureRepositoryDir()
     const files = await this.app.vault.adapter.list(this.dataDir)
     return files.files
       .map((filePath) => path.basename(filePath))
@@ -154,6 +197,7 @@ export abstract class AbstractJsonRepository<T, M> {
   }
 
   public async read(fileName: string): Promise<T | null> {
+    await this.ensureRepositoryDir()
     const filePath = normalizePath(path.join(this.dataDir, fileName))
     if (!(await this.app.vault.adapter.exists(filePath))) return null
 
@@ -162,6 +206,7 @@ export abstract class AbstractJsonRepository<T, M> {
   }
 
   public async delete(fileName: string): Promise<void> {
+    await this.ensureRepositoryDir()
     const filePath = normalizePath(path.join(this.dataDir, fileName))
     if (await this.app.vault.adapter.exists(filePath)) {
       await this.removeFile(filePath)

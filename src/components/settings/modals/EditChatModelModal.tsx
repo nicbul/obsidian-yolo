@@ -18,6 +18,7 @@ import { ObsidianButton } from '../../common/ObsidianButton'
 import { ObsidianDropdown } from '../../common/ObsidianDropdown'
 import { ObsidianSetting } from '../../common/ObsidianSetting'
 import { ObsidianTextInput } from '../../common/ObsidianTextInput'
+import { ObsidianToggle } from '../../common/ObsidianToggle'
 import { ReactModal } from '../../common/ReactModal'
 
 type EditChatModelModalComponentProps = {
@@ -41,6 +42,29 @@ type EditableChatModel = ChatModel & {
 }
 
 const CUSTOM_PARAMETER_TYPES = ['text', 'number', 'boolean', 'json'] as const
+const RESERVED_CUSTOM_PARAMETER_KEYS = new Set([
+  'temperature',
+  'top_p',
+  'max_tokens',
+  'max_output_tokens',
+])
+
+const isReservedCustomParameterKey = (key: string): boolean =>
+  RESERVED_CUSTOM_PARAMETER_KEYS.has(key.trim().toLowerCase())
+
+const MODEL_SAMPLING_DEFAULTS = {
+  temperature: 0.8,
+  topP: 0.9,
+  maxOutputTokens: 4096,
+} as const
+
+const clampTemperature = (value: number): number =>
+  Math.min(2, Math.max(0, value))
+
+const clampTopP = (value: number): number => Math.min(1, Math.max(0, value))
+
+const clampMaxOutputTokens = (value: number): number =>
+  Math.max(1, Math.floor(value))
 
 export class EditChatModelModal extends ReactModal<EditChatModelModalComponentProps> {
   constructor(app: App, plugin: SmartComposerPlugin, model: ChatModel) {
@@ -63,20 +87,6 @@ function EditChatModelModalComponent({
 }: EditChatModelModalComponentProps & { onClose: () => void }) {
   const { t } = useLanguage()
   const editableModel: EditableChatModel = model
-  const defaultSamplingCustomParameters: CustomParameter[] = [
-    { key: 'temperature', value: '0.8', type: 'number' },
-    { key: 'top_p', value: '', type: 'number' },
-  ]
-  const withSamplingDefaults = (entries?: CustomParameter[]) => {
-    const base = Array.isArray(entries) ? entries : []
-    const existingKeys = new Set(
-      base.map((entry) => entry.key.trim().toLowerCase()),
-    )
-    const defaultsToAdd = defaultSamplingCustomParameters.filter(
-      (entry) => !existingKeys.has(entry.key),
-    )
-    return [...defaultsToAdd, ...base]
-  }
 
   const normalizeReasoningType = (
     value: string,
@@ -144,9 +154,61 @@ function EditChatModelModalComponent({
   const [toolType, setToolType] = useState<'none' | 'gemini'>(
     normalizeToolType(editableModel.toolType ?? 'none'),
   )
-  const [customParameters, setCustomParameters] = useState<CustomParameter[]>(
-    () => withSamplingDefaults(editableModel.customParameters),
+  const [modelParamCache, setModelParamCache] = useState<{
+    temperature: number
+    topP: number
+    maxOutputTokens: number
+  }>(() => ({
+    temperature:
+      editableModel.temperature ?? MODEL_SAMPLING_DEFAULTS.temperature,
+    topP: editableModel.topP ?? MODEL_SAMPLING_DEFAULTS.topP,
+    maxOutputTokens:
+      editableModel.maxOutputTokens ?? MODEL_SAMPLING_DEFAULTS.maxOutputTokens,
+  }))
+  const [temperature, setTemperature] = useState<number | undefined>(
+    editableModel.temperature,
   )
+  const [topP, setTopP] = useState<number | undefined>(editableModel.topP)
+  const [maxOutputTokens, setMaxOutputTokens] = useState<number | undefined>(
+    editableModel.maxOutputTokens,
+  )
+  const [customParameters, setCustomParameters] = useState<CustomParameter[]>(
+    () =>
+      Array.isArray(editableModel.customParameters)
+        ? editableModel.customParameters.filter(
+            (entry) => !isReservedCustomParameterKey(entry.key),
+          )
+        : [],
+  )
+
+  const resetModelParams = () => {
+    setModelParamCache({
+      temperature: MODEL_SAMPLING_DEFAULTS.temperature,
+      topP: MODEL_SAMPLING_DEFAULTS.topP,
+      maxOutputTokens: MODEL_SAMPLING_DEFAULTS.maxOutputTokens,
+    })
+    setTemperature(MODEL_SAMPLING_DEFAULTS.temperature)
+    setTopP(MODEL_SAMPLING_DEFAULTS.topP)
+    setMaxOutputTokens(MODEL_SAMPLING_DEFAULTS.maxOutputTokens)
+  }
+
+  const setTemperatureEnabled = (enabled: boolean) => {
+    const current = temperature ?? modelParamCache.temperature
+    setModelParamCache((prev) => ({ ...prev, temperature: current }))
+    setTemperature(enabled ? current : undefined)
+  }
+
+  const setTopPEnabled = (enabled: boolean) => {
+    const current = topP ?? modelParamCache.topP
+    setModelParamCache((prev) => ({ ...prev, topP: current }))
+    setTopP(enabled ? current : undefined)
+  }
+
+  const setMaxOutputTokensEnabled = (enabled: boolean) => {
+    const current = maxOutputTokens ?? modelParamCache.maxOutputTokens
+    setModelParamCache((prev) => ({ ...prev, maxOutputTokens: current }))
+    setMaxOutputTokens(enabled ? current : undefined)
+  }
 
   const handleSubmit = () => {
     if (!formData.model.trim()) {
@@ -181,6 +243,9 @@ function EditChatModelModalComponent({
             formData.name && formData.name.trim().length > 0
               ? formData.name
               : undefined,
+          temperature,
+          topP,
+          maxOutputTokens,
         }
 
         // Apply according to selected reasoningType only (not limited by providerType)
@@ -217,8 +282,9 @@ function EditChatModelModalComponent({
         // Apply tool type
         updatedModel.toolType = toolType
 
-        const sanitizedCustomParameters =
-          sanitizeCustomParameters(customParameters)
+        const sanitizedCustomParameters = sanitizeCustomParameters(
+          customParameters,
+        ).filter((entry) => !isReservedCustomParameterKey(entry.key))
 
         if (sanitizedCustomParameters.length > 0) {
           updatedModel.customParameters = sanitizedCustomParameters
@@ -252,7 +318,7 @@ function EditChatModelModalComponent({
   }
 
   return (
-    <>
+    <div className="smtcmp-chat-model-modal-form">
       <ObsidianSetting
         name={t('settings.models.modelId')}
         desc={t('settings.models.modelIdDesc')}
@@ -322,6 +388,214 @@ function EditChatModelModalComponent({
           onChange={(v: string) => setToolType(normalizeToolType(v))}
         />
       </ObsidianSetting>
+
+      <div className="smtcmp-agent-tools-panel smtcmp-agent-model-panel">
+        <div className="smtcmp-agent-tools-panel-head smtcmp-agent-model-panel-head">
+          <div className="smtcmp-agent-tools-panel-title">
+            {t('settings.models.sampling', 'Sampling parameters')}
+          </div>
+          <button
+            type="button"
+            className="smtcmp-agent-model-reset"
+            onClick={resetModelParams}
+          >
+            {t('settings.models.restoreDefaults', 'Restore defaults')}
+          </button>
+        </div>
+
+        <div className="smtcmp-agent-model-controls">
+          <div
+            className={`smtcmp-agent-model-control${
+              temperature === undefined ? ' is-disabled' : ''
+            }`}
+          >
+            <div className="smtcmp-agent-model-control-top">
+              <div className="smtcmp-agent-model-control-meta">
+                <div className="smtcmp-agent-model-control-label">
+                  {t(
+                    'settings.conversationSettings.temperature',
+                    'Temperature',
+                  )}
+                </div>
+              </div>
+              <div className="smtcmp-agent-model-control-actions">
+                <ObsidianToggle
+                  value={temperature !== undefined}
+                  onChange={setTemperatureEnabled}
+                />
+              </div>
+            </div>
+            {temperature !== undefined && (
+              <div className="smtcmp-agent-model-control-adjust">
+                <input
+                  type="range"
+                  min={0}
+                  max={2}
+                  step={0.01}
+                  value={temperature ?? modelParamCache.temperature}
+                  onChange={(event) => {
+                    const next = Number(event.currentTarget.value)
+                    if (!Number.isFinite(next)) {
+                      return
+                    }
+                    const clamped = clampTemperature(next)
+                    setModelParamCache((prev) => ({
+                      ...prev,
+                      temperature: clamped,
+                    }))
+                    setTemperature(clamped)
+                  }}
+                />
+                <input
+                  type="number"
+                  className="smtcmp-agent-model-number"
+                  min={0}
+                  max={2}
+                  step={0.1}
+                  value={temperature ?? modelParamCache.temperature}
+                  onChange={(event) => {
+                    const next = Number(event.currentTarget.value)
+                    if (!Number.isFinite(next)) {
+                      return
+                    }
+                    const clamped = clampTemperature(next)
+                    setModelParamCache((prev) => ({
+                      ...prev,
+                      temperature: clamped,
+                    }))
+                    setTemperature(clamped)
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div
+            className={`smtcmp-agent-model-control${
+              topP === undefined ? ' is-disabled' : ''
+            }`}
+          >
+            <div className="smtcmp-agent-model-control-top">
+              <div className="smtcmp-agent-model-control-meta">
+                <div className="smtcmp-agent-model-control-label">
+                  {t('settings.conversationSettings.topP', 'Top P')}
+                </div>
+              </div>
+              <div className="smtcmp-agent-model-control-actions">
+                <ObsidianToggle
+                  value={topP !== undefined}
+                  onChange={setTopPEnabled}
+                />
+              </div>
+            </div>
+            {topP !== undefined && (
+              <div className="smtcmp-agent-model-control-adjust">
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={topP ?? modelParamCache.topP}
+                  onChange={(event) => {
+                    const next = Number(event.currentTarget.value)
+                    if (!Number.isFinite(next)) {
+                      return
+                    }
+                    const clamped = clampTopP(next)
+                    setModelParamCache((prev) => ({ ...prev, topP: clamped }))
+                    setTopP(clamped)
+                  }}
+                />
+                <input
+                  type="number"
+                  className="smtcmp-agent-model-number"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={topP ?? modelParamCache.topP}
+                  onChange={(event) => {
+                    const next = Number(event.currentTarget.value)
+                    if (!Number.isFinite(next)) {
+                      return
+                    }
+                    const clamped = clampTopP(next)
+                    setModelParamCache((prev) => ({ ...prev, topP: clamped }))
+                    setTopP(clamped)
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div
+            className={`smtcmp-agent-model-control${
+              maxOutputTokens === undefined ? ' is-disabled' : ''
+            }`}
+          >
+            <div className="smtcmp-agent-model-control-top">
+              <div className="smtcmp-agent-model-control-meta">
+                <div className="smtcmp-agent-model-control-label">
+                  {t('settings.models.maxOutputTokens', 'Max output tokens')}
+                </div>
+              </div>
+              <div className="smtcmp-agent-model-control-actions">
+                <ObsidianToggle
+                  value={maxOutputTokens !== undefined}
+                  onChange={setMaxOutputTokensEnabled}
+                />
+              </div>
+            </div>
+            {maxOutputTokens !== undefined && (
+              <div className="smtcmp-agent-model-control-adjust">
+                <input
+                  type="range"
+                  min={256}
+                  max={32768}
+                  step={256}
+                  value={Math.min(
+                    32768,
+                    Math.max(
+                      256,
+                      maxOutputTokens ?? modelParamCache.maxOutputTokens,
+                    ),
+                  )}
+                  onChange={(event) => {
+                    const next = Number(event.currentTarget.value)
+                    if (!Number.isFinite(next)) {
+                      return
+                    }
+                    const clamped = clampMaxOutputTokens(next)
+                    setModelParamCache((prev) => ({
+                      ...prev,
+                      maxOutputTokens: clamped,
+                    }))
+                    setMaxOutputTokens(clamped)
+                  }}
+                />
+                <input
+                  type="number"
+                  className="smtcmp-agent-model-number"
+                  min={1}
+                  step={1}
+                  value={maxOutputTokens ?? modelParamCache.maxOutputTokens}
+                  onChange={(event) => {
+                    const next = Number(event.currentTarget.value)
+                    if (!Number.isFinite(next)) {
+                      return
+                    }
+                    const clamped = clampMaxOutputTokens(next)
+                    setModelParamCache((prev) => ({
+                      ...prev,
+                      maxOutputTokens: clamped,
+                    }))
+                    setMaxOutputTokens(clamped)
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
       <ObsidianSetting
         name={t('settings.models.customParameters')}
@@ -408,6 +682,6 @@ function EditChatModelModalComponent({
         <ObsidianButton text={t('common.save')} onClick={handleSubmit} cta />
         <ObsidianButton text={t('common.cancel')} onClick={onClose} />
       </ObsidianSetting>
-    </>
+    </div>
   )
 }

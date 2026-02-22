@@ -203,3 +203,15 @@
   background-color: var(--interactive-hover);
   border-color: var(--background-modifier-border-hover);
 }
+
+.smtcmp-chat-model-modal-form .setting-item:not(.smtcmp-settings-kv-entry) {
+  align-items: flex-start;
+  padding-top: var(--size-4-2) !important;
+  padding-bottom: var(--size-4-2) !important;
+}
+
+.smtcmp-chat-model-modal-form
+  .setting-item:not(.smtcmp-settings-kv-entry)
+  .setting-item-description {
+  margin-top: 6px;
+}

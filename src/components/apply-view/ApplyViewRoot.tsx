@@ -531,9 +531,7 @@ export default function ApplyViewRoot({
               className="smtcmp-toolbar-icon-btn"
               title={t('applyView.prevChange', 'Previous change')}
               aria-label={t('applyView.prevChange', 'Previous change')}
-              disabled={
-                modifiedBlockIndices.length === 0 || currentDiffIndex === 0
-              }
+              disabled={modifiedBlockIndices.length === 0}
             >
               <span className="smtcmp-toolbar-icon">↑</span>
             </button>
@@ -547,10 +545,7 @@ export default function ApplyViewRoot({
               className="smtcmp-toolbar-icon-btn"
               title={t('applyView.nextChange', 'Next change')}
               aria-label={t('applyView.nextChange', 'Next change')}
-              disabled={
-                modifiedBlockIndices.length === 0 ||
-                currentDiffIndex >= modifiedBlockIndices.length - 1
-              }
+              disabled={modifiedBlockIndices.length === 0}
             >
               <span className="smtcmp-toolbar-icon">↓</span>
             </button>

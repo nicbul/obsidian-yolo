@@ -451,6 +451,9 @@ export const it: TranslationKeys = {
         'Tipo di chiamata di strumento supportato da questo modello.',
       toolTypeNone: 'Nessuno',
       toolTypeGemini: 'Gemini',
+      sampling: 'Parametri di campionamento',
+      restoreDefaults: 'Ripristina predefiniti',
+      maxOutputTokens: 'Token massimi in output',
       customParameters: 'Parametri personalizzati',
       customParametersDesc:
         'Parametri aggiuntivi da inviare al modello (formato JSON).',

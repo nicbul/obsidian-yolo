@@ -33,7 +33,7 @@ export const assistantSchema = z.object({
   id: z.string(),
   name: z.string().min(1, 'Name cannot be empty'),
   description: z.string().optional(),
-  systemPrompt: z.string().min(1, 'System prompt cannot be empty'),
+  systemPrompt: z.string().default(''),
   icon: assistantIconSchema.optional(),
   persona: agentPersonaSchema.optional(),
   modelId: z.string().optional(),

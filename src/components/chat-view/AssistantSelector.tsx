@@ -11,7 +11,13 @@ import {
 import { Assistant } from '../../types/assistant.types'
 import { renderAssistantIcon } from '../../utils/assistant-icon'
 
-export function AssistantSelector() {
+type AssistantSelectorProps = {
+  onAssistantChange?: (assistant: Assistant) => void
+}
+
+export function AssistantSelector({
+  onAssistantChange,
+}: AssistantSelectorProps) {
   const { settings, setSettings } = useSettings()
   const { t } = useLanguage()
   const [open, setOpen] = useState(false)
@@ -31,6 +37,7 @@ export function AssistantSelector() {
           ...settings,
           currentAssistantId: assistant.id,
         })
+        onAssistantChange?.(assistant)
         setOpen(false)
       } catch (error: unknown) {
         console.error('Failed to select assistant', error)
@@ -46,6 +53,12 @@ export function AssistantSelector() {
           ...settings,
           currentAssistantId: DEFAULT_ASSISTANT_ID,
         })
+        const fallbackDefaultAssistant = assistants.find((assistant) =>
+          isDefaultAssistantId(assistant.id),
+        )
+        if (fallbackDefaultAssistant) {
+          onAssistantChange?.(fallbackDefaultAssistant)
+        }
         setOpen(false)
       } catch (error: unknown) {
         console.error('Failed to select default assistant', error)

@@ -450,6 +450,9 @@ export const en: TranslationKeys = {
       toolTypeDesc: 'Select the tool type supported by the model',
       toolTypeNone: 'No tools',
       toolTypeGemini: 'Gemini tools',
+      sampling: 'Sampling parameters',
+      restoreDefaults: 'Restore defaults',
+      maxOutputTokens: 'Max output tokens',
       customParameters: 'Custom parameters',
       customParametersDesc:
         'Attach additional request fields; values accept plain text or JSON (for example, {"thinking": {"type": "enabled"}}).',

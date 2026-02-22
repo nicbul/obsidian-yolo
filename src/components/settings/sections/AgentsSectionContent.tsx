@@ -390,11 +390,7 @@ export function AgentsSectionContent({
   }, [assistants, draftAgent, initialAssistantId, settings.chatModelId])
 
   const upsertDraft = async () => {
-    if (
-      !draftAgent ||
-      !draftAgent.name.trim() ||
-      !draftAgent.systemPrompt.trim()
-    ) {
+    if (!draftAgent || !draftAgent.name.trim()) {
       return
     }
 

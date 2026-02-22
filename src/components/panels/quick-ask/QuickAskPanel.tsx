@@ -177,7 +177,7 @@ export function QuickAskPanel({
   const { t } = useLanguage()
   const { getRAGEngine } = useRAG()
   const { getMcpManager } = useMcp()
-  const { createOrUpdateConversation, generateConversationTitle } =
+  const { createOrUpdateConversationImmediately, generateConversationTitle } =
     useChatHistory()
 
   const assistants = settings.assistants || []
@@ -702,23 +702,26 @@ export function QuickAskPanel({
           return current
         })
 
-        if (createOrUpdateConversation) {
-          void Promise.resolve(
-            createOrUpdateConversation(conversationId, finalMessages),
-          ).catch((error) => {
+        void (async () => {
+          try {
+            await createOrUpdateConversationImmediately(
+              conversationId,
+              finalMessages,
+            )
+          } catch (error) {
             console.error('Failed to save quick ask conversation', error)
-          })
-        }
-        if (generateConversationTitle) {
-          void Promise.resolve(
-            generateConversationTitle(conversationId, finalMessages),
-          ).catch((error) => {
+            return
+          }
+
+          try {
+            await generateConversationTitle(conversationId, finalMessages)
+          } catch (error) {
             console.error(
               'Failed to generate quick ask conversation title',
               error,
             )
-          })
-        }
+          }
+        })()
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') {
           // Aborted by user
@@ -734,7 +737,7 @@ export function QuickAskPanel({
     [
       chatMessages,
       conversationId,
-      createOrUpdateConversation,
+      createOrUpdateConversationImmediately,
       generateConversationTitle,
       getMcpManager,
       isStreaming,
@@ -742,7 +745,6 @@ export function QuickAskPanel({
       model,
       promptGenerator,
       providerClient,
-      settings,
       t,
     ],
   )

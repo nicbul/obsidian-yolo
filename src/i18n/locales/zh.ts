@@ -415,6 +415,9 @@ export const zh: TranslationKeys = {
       toolTypeDesc: '选择模型支持的工具类型',
       toolTypeNone: '不启用工具',
       toolTypeGemini: 'Gemini 工具',
+      sampling: '采样参数',
+      restoreDefaults: '恢复默认值',
+      maxOutputTokens: '最大输出 token',
       customParameters: '自定义参数',
       customParametersDesc:
         '为请求附加额外字段，值支持纯文本或 JSON（例如 {"type":"enabled"} 或 0.7）。',

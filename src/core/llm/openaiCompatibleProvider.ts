@@ -130,12 +130,11 @@ export class OpenAICompatibleProvider extends BaseLLMProvider<
       }
 
       if (openaiTools.length > 0) {
-        formattedRequest.tools = openaiTools
+        formattedRequest.tools = [
+          ...(formattedRequest.tools ?? []),
+          ...openaiTools,
+        ]
       }
-    }
-    // If toolType is Gemini but no Gemini tools enabled, also ensure top-level tools are unset
-    else if (model.toolType === 'gemini') {
-      delete formattedRequest.tools
     }
 
     // Inject Gemini thinking config for OpenAI-compatible gateways if user selected Gemini reasoning
@@ -231,12 +230,11 @@ export class OpenAICompatibleProvider extends BaseLLMProvider<
       }
 
       if (openaiTools.length > 0) {
-        formattedRequest.tools = openaiTools
+        formattedRequest.tools = [
+          ...(formattedRequest.tools ?? []),
+          ...openaiTools,
+        ]
       }
-    }
-    if (model.toolType === 'gemini' && !options?.geminiTools) {
-      // Ensure no top-level tools when Gemini tool type but none enabled
-      delete formattedRequest.tools
     }
 
     if (model.thinking?.enabled) {

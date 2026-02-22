@@ -19,6 +19,8 @@ import {
 import {
   LLMResponseNonStreaming,
   LLMResponseStreaming,
+  ToolCall,
+  ToolCallDelta,
 } from '../../types/llm/response'
 
 function hasObjectProperty<T extends object, K extends PropertyKey>(
@@ -79,6 +81,178 @@ function extractReasoningContent(source: unknown): string | undefined {
     }
   }
   return undefined
+}
+
+function normalizeFunctionArguments(value: unknown): string | undefined {
+  if (typeof value === 'string') {
+    return value
+  }
+  if (value === null || value === undefined) {
+    return undefined
+  }
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return undefined
+  }
+}
+
+function normalizeToolCalls(source: unknown): ToolCall[] | undefined {
+  if (!Array.isArray(source)) {
+    return undefined
+  }
+
+  const normalized = source
+    .map((entry): ToolCall | null => {
+      if (!entry || typeof entry !== 'object') {
+        return null
+      }
+
+      const record = entry as Record<string, unknown>
+      const functionRecord =
+        typeof record.function === 'object' && record.function !== null
+          ? (record.function as Record<string, unknown>)
+          : null
+
+      if (!functionRecord) {
+        return null
+      }
+
+      const name = functionRecord.name
+      if (typeof name !== 'string' || name.trim().length === 0) {
+        return null
+      }
+
+      const argumentsText = normalizeFunctionArguments(functionRecord.arguments)
+
+      return {
+        id: typeof record.id === 'string' ? record.id : undefined,
+        type: 'function',
+        function: {
+          name,
+          arguments: argumentsText,
+        },
+      }
+    })
+    .filter((entry): entry is ToolCall => entry !== null)
+
+  return normalized.length > 0 ? normalized : undefined
+}
+
+function extractLegacyFunctionCall(source: unknown): ToolCall[] | undefined {
+  if (!source || typeof source !== 'object' || !('function_call' in source)) {
+    return undefined
+  }
+
+  const functionCall = (source as { function_call?: unknown }).function_call
+  if (!functionCall || typeof functionCall !== 'object') {
+    return undefined
+  }
+
+  const record = functionCall as Record<string, unknown>
+  const name = record.name
+  if (typeof name !== 'string' || name.trim().length === 0) {
+    return undefined
+  }
+
+  const argumentsText = normalizeFunctionArguments(record.arguments)
+
+  return [
+    {
+      type: 'function',
+      function: {
+        name,
+        arguments: argumentsText,
+      },
+    },
+  ]
+}
+
+function normalizeToolCallDeltas(source: unknown): ToolCallDelta[] | undefined {
+  if (!Array.isArray(source)) {
+    return undefined
+  }
+
+  const normalized = source
+    .map((entry, fallbackIndex): ToolCallDelta | null => {
+      if (!entry || typeof entry !== 'object') {
+        return null
+      }
+
+      const record = entry as Record<string, unknown>
+      const delta: ToolCallDelta = {
+        index: typeof record.index === 'number' ? record.index : fallbackIndex,
+      }
+
+      if (typeof record.id === 'string') {
+        delta.id = record.id
+      }
+      if (record.type === 'function') {
+        delta.type = 'function'
+      }
+
+      const functionRecord =
+        typeof record.function === 'object' && record.function !== null
+          ? (record.function as Record<string, unknown>)
+          : null
+
+      if (functionRecord) {
+        const name =
+          typeof functionRecord.name === 'string'
+            ? functionRecord.name
+            : undefined
+        const argumentsText = normalizeFunctionArguments(
+          functionRecord.arguments,
+        )
+        if (name !== undefined || argumentsText !== undefined) {
+          delta.function = {
+            name,
+            arguments: argumentsText,
+          }
+        }
+      }
+
+      if (!delta.id && !delta.type && !delta.function) {
+        return null
+      }
+
+      return delta
+    })
+    .filter((entry): entry is ToolCallDelta => entry !== null)
+
+  return normalized.length > 0 ? normalized : undefined
+}
+
+function extractLegacyFunctionCallDelta(
+  source: unknown,
+): ToolCallDelta[] | undefined {
+  if (!source || typeof source !== 'object' || !('function_call' in source)) {
+    return undefined
+  }
+
+  const functionCall = (source as { function_call?: unknown }).function_call
+  if (!functionCall || typeof functionCall !== 'object') {
+    return undefined
+  }
+
+  const record = functionCall as Record<string, unknown>
+  const name = typeof record.name === 'string' ? record.name : undefined
+  const argumentsText = normalizeFunctionArguments(record.arguments)
+
+  if (!name && argumentsText === undefined) {
+    return undefined
+  }
+
+  return [
+    {
+      index: 0,
+      type: 'function',
+      function: {
+        name,
+        arguments: argumentsText,
+      },
+    },
+  ]
 }
 
 export class OpenAIMessageAdapter {
@@ -254,6 +428,8 @@ export class OpenAIMessageAdapter {
                   return { type: 'text', text: part.text }
                 case 'image_url':
                   return { type: 'image_url', image_url: part.image_url }
+                default:
+                  throw new Error('Unsupported content part type.')
               }
             })
           : message.content
@@ -298,13 +474,32 @@ export class OpenAIMessageAdapter {
     return {
       id: response.id,
       choices: response.choices.map((choice) => ({
-        finish_reason: choice.finish_reason,
-        message: {
-          content: choice.message.content,
-          reasoning: extractReasoningContent(choice.message),
-          role: choice.message.role,
-          tool_calls: choice.message.tool_calls,
-        },
+        ...(() => {
+          const toolCallsFromStandardField = normalizeToolCalls(
+            choice.message.tool_calls,
+          )
+          const toolCallsFromLegacyField = extractLegacyFunctionCall(
+            choice.message,
+          )
+          const normalizedToolCalls =
+            toolCallsFromStandardField ?? toolCallsFromLegacyField
+
+          if (!toolCallsFromStandardField && toolCallsFromLegacyField) {
+            console.warn(
+              '[Smart Composer] Parsed legacy function_call response format (non-stream).',
+            )
+          }
+
+          return {
+            finish_reason: choice.finish_reason,
+            message: {
+              content: choice.message.content,
+              reasoning: extractReasoningContent(choice.message),
+              role: choice.message.role,
+              tool_calls: normalizedToolCalls,
+            },
+          }
+        })(),
       })),
       created: response.created,
       model: response.model,
@@ -320,13 +515,32 @@ export class OpenAIMessageAdapter {
     return {
       id: chunk.id,
       choices: chunk.choices.map((choice) => ({
-        finish_reason: choice.finish_reason ?? null,
-        delta: {
-          content: choice.delta.content ?? null,
-          reasoning: extractReasoningContent(choice.delta),
-          role: choice.delta.role,
-          tool_calls: choice.delta.tool_calls,
-        },
+        ...(() => {
+          const toolCallsFromStandardField = normalizeToolCallDeltas(
+            choice.delta.tool_calls,
+          )
+          const toolCallsFromLegacyField = extractLegacyFunctionCallDelta(
+            choice.delta,
+          )
+          const normalizedToolCallDeltas =
+            toolCallsFromStandardField ?? toolCallsFromLegacyField
+
+          if (!toolCallsFromStandardField && toolCallsFromLegacyField) {
+            console.warn(
+              '[Smart Composer] Parsed legacy function_call response format (stream).',
+            )
+          }
+
+          return {
+            finish_reason: choice.finish_reason ?? null,
+            delta: {
+              content: choice.delta.content ?? null,
+              reasoning: extractReasoningContent(choice.delta),
+              role: choice.delta.role,
+              tool_calls: normalizedToolCallDeltas,
+            },
+          }
+        })(),
       })),
       created: chunk.created,
       model: chunk.model,
