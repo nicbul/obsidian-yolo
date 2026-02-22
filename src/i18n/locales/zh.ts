@@ -705,6 +705,12 @@ export const zh: TranslationKeys = {
     regenerate: '重新生成',
     reasoning: '推理过程',
     annotations: '注释',
+    emptyState: {
+      chatTitle: '先想清楚，再落笔',
+      chatDescription: '适合提问、润色与改写，专注表达本身',
+      agentTitle: '让 AI 去执行',
+      agentDescription: '启用工具链，处理搜索、读写与多步骤任务',
+    },
     codeBlock: {
       showRawText: '显示原始文本',
       showFormattedText: '显示格式化文本',
@@ -913,9 +919,9 @@ export const zh: TranslationKeys = {
 
   chatMode: {
     chat: '对话',
-    chatDesc: '默认 Agent（禁用工具）',
+    chatDesc: '适合提问、润色与改写',
     agent: 'Agent',
-    agentDesc: '工具增强 Agent 模式',
+    agentDesc: '启用工具链，处理多步骤任务',
   },
 
   reasoning: {

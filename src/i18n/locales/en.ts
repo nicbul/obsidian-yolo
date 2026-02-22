@@ -747,6 +747,14 @@ export const en: TranslationKeys = {
     regenerate: 'Regenerate',
     reasoning: 'Reasoning',
     annotations: 'Annotations',
+    emptyState: {
+      chatTitle: 'Think first, then write',
+      chatDescription:
+        'Great for questions, polishing, and rewriting with focus on expression.',
+      agentTitle: 'Let AI execute',
+      agentDescription:
+        'Enable tools to handle search, read/write operations, and multi-step tasks.',
+    },
     codeBlock: {
       showRawText: 'Show raw text',
       showFormattedText: 'Show formatted text',
@@ -965,9 +973,9 @@ export const en: TranslationKeys = {
 
   chatMode: {
     chat: 'Chat',
-    chatDesc: 'Default agent (tools disabled)',
+    chatDesc: 'Best for asking, polishing, and rewriting',
     agent: 'Agent',
-    agentDesc: 'Tool-enabled agent mode',
+    agentDesc: 'Enable tools for multi-step execution',
   },
 
   reasoning: {

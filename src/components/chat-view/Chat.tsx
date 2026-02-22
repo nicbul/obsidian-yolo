@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { CircleStop, History, Plus } from 'lucide-react'
+import { Bot, CircleStop, History, MessageCircle, Plus } from 'lucide-react'
 import { Notice, Platform, TFile, TFolder } from 'obsidian'
 import {
   forwardRef,
@@ -1312,6 +1312,38 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
     <div className="smtcmp-chat-container">
       {header}
       <div className="smtcmp-chat-messages" ref={chatMessagesRef}>
+        {groupedChatMessages.length === 0 && !submitChatMutation.isPending && (
+          <div className="smtcmp-chat-empty-state">
+            <div
+              key={chatMode}
+              className="smtcmp-chat-empty-state-icon"
+              data-mode={chatMode}
+              aria-hidden="true"
+            >
+              {chatMode === 'agent' ? (
+                <Bot size={18} strokeWidth={2} />
+              ) : (
+                <MessageCircle size={18} strokeWidth={2} />
+              )}
+            </div>
+            <div className="smtcmp-chat-empty-state-title">
+              {chatMode === 'agent'
+                ? t('chat.emptyState.agentTitle', '让 AI 去执行')
+                : t('chat.emptyState.chatTitle', '先想清楚，再落笔')}
+            </div>
+            <div className="smtcmp-chat-empty-state-description">
+              {chatMode === 'agent'
+                ? t(
+                    'chat.emptyState.agentDescription',
+                    '启用工具链，处理搜索、读写与多步骤任务',
+                  )
+                : t(
+                    'chat.emptyState.chatDescription',
+                    '适合提问、润色与改写，专注表达本身',
+                  )}
+            </div>
+          </div>
+        )}
         {groupedChatMessages.map((messageOrGroup, index) => {
           if (Array.isArray(messageOrGroup)) {
             return (

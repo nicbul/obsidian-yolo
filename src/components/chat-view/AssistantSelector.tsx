@@ -84,7 +84,7 @@ export function AssistantSelector() {
         >
           <ul className="smtcmp-assistant-selector-list smtcmp-model-select-list">
             {/* "No Assistant" option */}
-            <li>
+            <li className="smtcmp-assistant-selector-row">
               <button
                 type="button"
                 className={`smtcmp-assistant-selector-item ${
@@ -106,7 +106,10 @@ export function AssistantSelector() {
             {assistants
               .filter((assistant) => !isDefaultAssistantId(assistant.id))
               .map((assistant) => (
-                <li key={assistant.id}>
+                <li
+                  key={assistant.id}
+                  className="smtcmp-assistant-selector-row"
+                >
                   <button
                     type="button"
                     className={`smtcmp-assistant-selector-item ${

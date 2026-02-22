@@ -668,6 +668,12 @@ export type TranslationKeys = {
     regenerate: string
     reasoning: string
     annotations: string
+    emptyState?: {
+      chatTitle?: string
+      chatDescription?: string
+      agentTitle?: string
+      agentDescription?: string
+    }
     codeBlock?: {
       showRawText?: string
       showFormattedText?: string

@@ -738,6 +738,14 @@ export const it: TranslationKeys = {
     regenerate: 'Rigenera',
     reasoning: 'Ragionamento',
     annotations: 'Annotazioni',
+    emptyState: {
+      chatTitle: 'Pensa prima, poi scrivi',
+      chatDescription:
+        "Ideale per domande, revisione e riscrittura, con focus sull'espressione.",
+      agentTitle: "Lascia eseguire all'AI",
+      agentDescription:
+        'Abilita gli strumenti per ricerca, lettura/scrittura e task multi-step.',
+    },
     codeBlock: {
       showRawText: 'Mostra testo grezzo',
       showFormattedText: 'Mostra testo formattato',
@@ -972,9 +980,9 @@ export const it: TranslationKeys = {
 
   chatMode: {
     chat: 'Chat',
-    chatDesc: 'Agent predefinito (strumenti disabilitati)',
+    chatDesc: 'Ideale per domande, revisione e riscrittura',
     agent: 'Agent',
-    agentDesc: 'Modalità agent con strumenti',
+    agentDesc: 'Abilita strumenti per esecuzione multi-step',
   },
 
   reasoning: {

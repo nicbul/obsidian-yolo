@@ -173,6 +173,27 @@
   scrollbar-width: thin;
 }
 
+.smtcmp-assistant-selector-row {
+  list-style: none;
+}
+
+.smtcmp-assistant-selector-content .smtcmp-assistant-selector-row {
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  display: block;
+  overflow: visible;
+  cursor: default;
+  line-height: inherit;
+  font-size: inherit;
+  gap: 0;
+}
+
 .smtcmp-assistant-selector-content
   .smtcmp-assistant-selector-list::-webkit-scrollbar {
   width: 8px;
@@ -200,10 +221,16 @@
 
 .smtcmp-assistant-selector-content .smtcmp-assistant-selector-item {
   display: flex;
+  width: 100%;
   align-items: center;
   gap: var(--size-4-2);
   padding: var(--size-4-1) var(--size-4-2);
   border-radius: var(--radius-m);
+  text-align: left;
+  font-family: inherit;
+  font-size: var(--font-ui-smaller);
+  line-height: var(--line-height-tight);
+  appearance: none;
   cursor: pointer;
   transition: background-color 0.15s ease;
   background-color: transparent;
